@@ -198,7 +198,7 @@ def populatePixels(start_position, start_color, colors, pixels, width, height, s
     # past filled pixels
     backtrack_pixels = []
 
-    logging.info("pixel placing started. Warning: this script is fast at the beginning but very slow at the end. Don't worry, let it run")
+    logging.info("pixel placing started. Warning: this script is fast at the beginning but very slow at the end. Don't worry, just let it run.")
     # while not all the pixels have been placed
     while placed_pixels < image_size:
         # if this pixel has not been placed (only happens the first iteration)
