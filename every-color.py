@@ -5,63 +5,6 @@ from PIL import Image
 from math import sqrt
 
 
-class Color:
-    def __init__(self, r, g, b):
-        self.r = r
-        self.g = g
-        self.b = b
-        self.RGBtuple = (r, g, b)
-        self.RBGlist = [r, g, b]
-        self.HSVtuple = self.__calculateHSV()
-
-    def __calculateHSV(self):
-        r = self.r / 255.0;
-        g = self.g / 255.0;
-        b = self.b / 255.0;
-
-        cmax = max(r, max(g, b));
-        cmin = min(r, min(g, b));
-        diff = cmax - cmin;
-
-        if cmax == cmin:
-            self.h = 0
-
-        elif cmax == r:
-            self.h = (60 * ((g - b) / diff) + 360) % 360;
-
-        elif cmax == g:
-            self.h = (60 * ((b - r) / diff) + 120) % 360;
-
-        elif cmax == b:
-            self.h = (60 * ((r - g) / diff) + 240) % 360;
-
-
-        if cmax == 0:
-            self.s = 0;
-        else:
-            self.s = (diff / cmax) * 100;
-
-        self.v = cmax * 100
-        return (self.h, self.s, self.v)
-
-
-    def distance(self, other):
-        return sqrt( (self.r - other.r) ** 2 + (self.g - other.g) ** 2 + (self.b - other.b) ** 2 )
-
-
-    def distanceSq(self, other):
-        return (self.r - other.r) ** 2 + (self.g - other.g) ** 2 + (self.b - other.b) ** 2
-
-
-    @property
-    def RGB(self):
-        return self.RGBtuple
-
-
-    @property
-    def hue(self):
-        return self.h
-
 def calculateSize(colors):
     if sqrt(colors ** 3).is_integer():
         width = int(sqrt(colors ** 3))
@@ -80,7 +23,7 @@ def generateColors(bits):
     for r in range(0, total_steps):
         for g in range(0, total_steps):
             for b in range(0, total_steps):
-                new_color = Color(r * step, g * step, b * step)
+                new_color = (r * step, g * step, b * step)
                 colors[r][g][b] = new_color
     return colors, step
 
@@ -155,6 +98,10 @@ def findNextPixels(pixels, x, y, width, height):
     return next
 
 
+def distanceSq(color1, color2):
+    return (color1[0] - color2[0]) ** 2 +  (color1[1] - color2[1]) ** 2 +  (color1[2] - color2[2]) ** 2
+
+
 def findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height):
     colors_len = len(colors)
     searched = set()
@@ -176,7 +123,7 @@ def findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height):
                     elif k >= colors_len: k = colors_len - 1
                     if (i, j, k) not in searched and colors[i][j][k]:
                         searched.add((i, j, k))
-                        dist_sq = average_color.distanceSq(colors[i][j][k])
+                        dist_sq = distanceSq(average_color, colors[i][j][k])
                         if not shortest_dist_sq or dist_sq <= shortest_dist_sq:
                             shortest_dist_sq = dist_sq
                             nx = i
@@ -190,28 +137,28 @@ def findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height):
 
 def populatePixels(colors, pixels, width, height, step):
     started = datetime.now()
+
     placed_pixels = 0
     percent = 0
     last_percent = None
-    place_radius = 0
     image_size = width * height
-    x, y = int(width/2), int(height/2) # pixel position
+    x, y = random.randint(0, width - 1),  random.randint(0, height - 1) # pixel position
 
     pixels_queue = []
     backtrack_pixels = []
 
     while placed_pixels < image_size:
         if not pixels[x][y]:
-            average = checkNeighborsAverage(pixels, x, y, width, height)
-            if average:
-                average_color = Color(average[0], average[1], average[2])
+            average_color = checkNeighborsAverage(pixels, x, y, width, height)
+            if average_color:
                 cx, cy, cz = findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height)
             else:
-                cx = 0
-                cy = 0
-                cz = 0
+                # this happens only when the program is first ran
+                cx = random.randint(0, len(colors) - 1)
+                cy = random.randint(0, len(colors) - 1)
+                cz = random.randint(0, len(colors) - 1)
 
-            pixels[x][y] = colors[cx][cy][cz].RGB
+            pixels[x][y] = colors[cx][cy][cz]
             colors[cx][cy][cz] = None
             backtrack_pixels.append((x, y))
             placed_pixels += 1
@@ -264,16 +211,8 @@ def populatePixels(colors, pixels, width, height, step):
                     print(f"{remaining_seconds} seconds")
 
     elapsed_seconds = int((datetime.now() - started).total_seconds())
-    elapsed_minutes = int(elapsed_seconds / 60)
-    elapsed_hours = int(elapsed_minutes / 60)
 
-    print("Completed! It took ", end="")
-    if elapsed_hours > 0:
-        print(f"{elapsed_hours} hours")
-    elif elapsed_minutes > 0:
-        print(f"{elapsed_minutes} minutes")
-    else:
-        print(f"{elapsed_seconds} seconds")
+    print(f"Completed! It took {elapsed_seconds} seconds")
 
     return pixels
 
@@ -282,11 +221,6 @@ def generateImage(pixels, width, height):
 
     for x in range(width):
         for y in range(height):
-            if not pixels[x][y]:
-                pixels[x][y] = (0, 0, 0)
-                print("pixel", x, y, "is empty")
-            #else:
-                #print(pixels[x][y])
             im.putpixel((x, y), pixels[x][y])
     return im
 
@@ -295,7 +229,7 @@ def saveImage(image, path="", filename="everycolor"):
 
 
 def main():
-    color_bits = 15
+    color_bits = 18
     colors, step = generateColors(color_bits)
     width, height = calculateSize(len(colors))
     pixels = generateEmptyPixels(width, height)
