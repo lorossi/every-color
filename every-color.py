@@ -46,14 +46,14 @@ def checkFreeNeighbors(pixels, x, y, width, height):
     return free_neighbors
 
 
-def checkNeighborsAverage(pixels, x, y, width, height):
+def checkNeighborsAverage(pixels, x, y, radius, width, height):
     average = [0, 0, 0]
     total_dist = 0
-    radius = 5
     found = 0
+
+    max_dist = radius * 2
     searched = []
     searched.append((x, y))
-
     for i in range(x - radius, x + radius + 1):
         if i < 0 or i >= width:
             continue
@@ -64,13 +64,15 @@ def checkNeighborsAverage(pixels, x, y, width, height):
 
             if (i, j) not in searched:
                 if pixels[i][j]:
+                    dist = max_dist - (abs(i - x) + abs(j - y))
+                    total_dist += dist
+                    found += 1
                     for p in range(3):
                         average[p] += pixels[i][j][p]
-                        found += 1
                 searched.append((x, y))
 
     if found > 0:
-        average = [a / found for a in average]
+        average = [a / total_dist for a in average]
     else:
         average = None
 
@@ -137,6 +139,7 @@ def findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height):
 
 def populatePixels(colors, pixels, width, height, step):
     started = datetime.now()
+    search_radius = 5
 
     placed_pixels = 0
     percent = 0
@@ -149,7 +152,7 @@ def populatePixels(colors, pixels, width, height, step):
 
     while placed_pixels < image_size:
         if not pixels[x][y]:
-            average_color = checkNeighborsAverage(pixels, x, y, width, height)
+            average_color = checkNeighborsAverage(pixels, x, y, search_radius, width, height)
             if average_color:
                 cx, cy, cz = findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height)
             else:
@@ -229,7 +232,7 @@ def saveImage(image, path="", filename="everycolor"):
 
 
 def main():
-    color_bits = 18
+    color_bits = 15
     colors, step = generateColors(color_bits)
     width, height = calculateSize(len(colors))
     pixels = generateEmptyPixels(width, height)
