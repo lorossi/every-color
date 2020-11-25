@@ -53,55 +53,49 @@ class Color:
         return (self.r - other.r) ** 2 + (self.g - other.g) ** 2 + (self.b - other.b) ** 2
 
 
-    def distance(self, other):
-        #https://stackoverflow.com/questions/5392061/algorithm-to-check-similarity-of-colors
-        """ C CODE:
-        double ColourDistance(RGB e1, RGB e2)
-        {
-          long rmean = ( (long)e1.r + (long)e2.r ) / 2;
-          long r = (long)e1.r - (long)e2.r;
-          long g = (long)e1.g - (long)e2.g;
-          long b = (long)e1.b - (long)e2.b;
-          return sqrt((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8));
-        }
-        """
-
-        rmean = (self.r + other.r) / 2
-        r = self.r - other.r
-        g = self.g - other.g
-        b = self.b - other.b
-        return sqrt(( int((512+rmean)*r*r)>>8) + 4*g*g + ( int((767-rmean)*b*b)>>8))
-
     @property
     def RGB(self):
         return self.RGBtuple
+
 
     @property
     def hue(self):
         return self.h
 
+def calculateSize(colors):
+    if sqrt(colors).is_integer():
+        width = int(sqrt(colors))
+        height = int(sqrt(colors))
+
+    else:
+        width = 256
+        height = 128
+    return width, height
 
 def generateColors(bit_depth):
     colors = []
-    step = int(256 / (2 ** bit_depth))
-    for r in range(0, 255, step):
-        for g in range(0, 255, step):
-            for b in range(0, 255, step):
+    step = int(256 / ( 2 ** (bit_depth / 3)))
+
+    for r in range(0, 256, step):
+        for g in range(0, 256, step):
+            for b in range(0, 256, step):
                 new_color = Color(r, g, b)
                 colors.append(new_color)
-
+    print(len(colors))
     return colors
 
-def generateEmptyPixels(side_length):
-    pixels = [[None for x in range(side_length)] for y in range(side_length)]
+def generateEmptyPixels(width, height):
+    pixels = [[None for y in range(height)] for x in range(width)]
     return pixels
 
 def checkFreeNeighbors(pixels, x, y, radius):
-    side_length = len(pixels)
+    width = len(pixels)
+    height = len(pixels[0])
+
     free_neighbors = []
     for nx in range(x - radius, x + radius + 1):
         for ny in range(y - radius, y + radius + 1):
-            if nx >= 0 and nx < side_length and ny >= 0 and ny < side_length and (x, y) != (nx, ny):
+            if nx >= 0 and nx < width and ny >= 0 and ny < height and (x, y) != (nx, ny):
                 if not pixels[nx][ny]:
                     free_neighbors.append((nx, ny))
 
@@ -109,11 +103,13 @@ def checkFreeNeighbors(pixels, x, y, radius):
 
 
 def checkPopulatedNeighbors(pixels, x, y, radius):
-    side_length = len(pixels)
+    width = len(pixels)
+    height = len(pixels[0])
+
     populated_neighbors = []
     for nx in range(x - radius, x + radius + 1):
         for ny in range(y - radius, y + radius + 1):
-            if nx >= 0 and nx < side_length and ny >= 0 and ny < side_length and (x, y) != (nx, ny):
+            if nx >= 0 and nx < width and ny >= 0 and ny < height and (x, y) != (nx, ny):
                 if pixels[nx][ny]:
                     populated_neighbors.append(pixels[nx][ny])
 
@@ -124,83 +120,103 @@ def populatePixels(colors, pixels):
     started = datetime.now()
     placed_pixels = 0
     percent = 0
-    last_percent = 0
+    last_percent = None
 
-    max_hue_diff = 1
-    side_length = len(pixels)
-    image_size =  side_length ** 2
-    starting_pixel = int(side_length / 2)
-    x, y = starting_pixel, starting_pixel
+    pixel_radius = 1
+    max_diff = 180
 
-    #candidate_pixels = []
+    width = len(pixels)
+    height = len(pixels[0])
+    image_size = width * height
+
+    x, y = int(width/2), int(height/2)
+
     backtrack_pixels = []
-    random.shuffle(colors)
+    #free_pixels = [(x, y) for x in range(width) for y in range(height)]
 
+    random.shuffle(colors)
     while len(colors) > 0:
         if not pixels[x][y]:
-            populated_neighbors = checkPopulatedNeighbors(pixels, x, y, 1)
+            populated_neighbors = checkPopulatedNeighbors(pixels, x, y, pixel_radius)
 
-            color_index = 0
             if len(populated_neighbors) > 0:
-                average = [sum(x) for x in zip(*populated_neighbors)]
-                average = [a / len(populated_neighbors) for a in average]
+                average = [0 for x in range(3)]
+                for a in range(3):
+                    for p in populated_neighbors:
+                        average[a] += p[a]
+                    average[a] /= len(populated_neighbors)
+
                 average_color = Color(average[0], average[1], average[2])
                 average_hue = average_color.hue
                 lower_dist_sq = None
+                color_index = 0
 
                 for i in range(len(colors)):
-                    hues_diff = abs(colors[i].hue - average_hue)
-                    if hues_diff > max_hue_diff:
-                        continue
+                    current_color = colors[i]
+                    """diff = average_hue - current_color.hue
+                    if diff > max_diff or diff < -max_diff:
+                        continue"""
 
-                    distance_sq = colors[i].distance(average_color)
+                    distance_sq = average_color.distanceSq(current_color)
                     if not lower_dist_sq or distance_sq < lower_dist_sq:
                         color_index = i
                         lower_dist_sq = distance_sq
 
+                if (lower_dist_sq == None): print("WTF", len(colors))
+
+            else:
+                color_index = 0
+
             pixels[x][y] = colors.pop(color_index).RGB
             placed_pixels += 1
-            backtrack_pixels.insert(0, (x, y))
+            backtrack_pixels.append((x, y))
+            #free_pixels.remove((x, y))
 
-        free_neighbors = checkFreeNeighbors(pixels, x, y, 1)
+        free_neighbors = checkFreeNeighbors(pixels, x, y, pixel_radius)
         if len(free_neighbors) > 0:
-            next_position = free_neighbors[0]
+            next_position = random.choice(free_neighbors)
             x = next_position[0]
             y = next_position[1]
 
         else:
-            next_position = backtrack_pixels.pop(0)
+            #backtrack_index = random.randint(0, len(backtrack_pixels) - 1)
+            #next_position = backtrack_pixels.pop(backtrack_index)
+
+            next_position = backtrack_pixels.pop(-1)
             x = next_position[0]
             y = next_position[1]
 
-
-        percent = round(placed_pixels / image_size * 100, 2)
+        percent = int(placed_pixels / image_size * 100)
         if percent != last_percent:
             last_percent = percent
-            elapsed_seconds = int((datetime.now() - started).total_seconds())
-            elapsed_minutes = int(elapsed_seconds / 60)
-            elapsed_hours = int(elapsed_minutes / 60)
 
-            total = 100 / percent * elapsed_seconds
-            remaining_seconds = int(total - elapsed_seconds)
-            remaining_minutes = int(remaining_seconds / 60)
-            remaining_hours = int(remaining_minutes / 60)
-
-            print(f"Progress: {percent}%, elapsed: ", end="")
-            if elapsed_hours > 0:
-                print(f"{elapsed_hours} hours", end="")
-            elif elapsed_minutes > 0:
-                print(f"{elapsed_minutes} minutes", end="")
+            if percent == 0:
+                print(f"Started selecting pixels")
             else:
-                print(f"{elapsed_seconds} seconds", end="")
+                elapsed_seconds = int((datetime.now() - started).total_seconds())
+                elapsed_minutes = int(elapsed_seconds / 60)
+                elapsed_hours = int(elapsed_minutes / 60)
 
-            print(", remaining: ", end="")
-            if remaining_hours > 0:
-                print(f"{remaining_hours} hours")
-            elif remaining_minutes > 0:
-                print(f"{remaining_minutes} minutes")
-            else:
-                print(f"{remaining_seconds} seconds")
+                total = 100 / percent * elapsed_seconds
+                remaining_seconds = int(total - elapsed_seconds)
+                remaining_minutes = int(remaining_seconds / 60)
+                remaining_hours = int(remaining_minutes / 60)
+
+                print(f"Progress: {percent}%, elapsed: ", end="")
+                if elapsed_hours > 0:
+                    print(f"{elapsed_hours} hours", end="")
+                elif elapsed_minutes > 0:
+                    print(f"{elapsed_minutes} minutes", end="")
+                else:
+                    print(f"{elapsed_seconds} seconds", end="")
+
+                print(", remaining: ", end="")
+                if remaining_hours > 0:
+                    print(f"{remaining_hours} hours")
+                elif remaining_minutes > 0:
+                    print(f"{remaining_minutes} minutes")
+                else:
+                    print(f"{remaining_seconds} seconds")
 
     elapsed_seconds = int((datetime.now() - started).total_seconds())
     elapsed_minutes = int(elapsed_seconds / 60)
@@ -217,14 +233,15 @@ def populatePixels(colors, pixels):
     return pixels
 
 def generateImage(pixels):
-    side = len(pixels)
-    im = Image.new("RGB", (side, side))
+    width = len(pixels)
+    height = len(pixels[0])
+    im = Image.new("RGB", (width, height))
 
-    for x in range(side):
-        for y in range(side):
+    for x in range(width):
+        for y in range(height):
             if not pixels[x][y]:
                 pixels[x][y] = (0, 0, 0)
-
+                print("pixel", x, y, "is empty")
             im.putpixel((x, y), pixels[x][y])
     return im
 
@@ -233,11 +250,10 @@ def saveImage(image, path="", filename="everycolor"):
 
 
 def main():
-    bit_depth = 6
-
-    colors = generateColors(bit_depth)
-    side_length = int(sqrt(len(colors)))
-    pixels = generateEmptyPixels(side_length)
+    color_bits = 15
+    colors = generateColors(color_bits)
+    width, height = calculateSize(len(colors))
+    pixels = generateEmptyPixels(width, height)
     pixels = populatePixels(colors, pixels)
     im = generateImage(pixels)
     saveImage(im)
