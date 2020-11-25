@@ -89,7 +89,6 @@ def generateEmptyPixels(width, height):
     return pixels
 
 def checkFreeNeighbors(pixels, x, y, width, height):
-
     free_neighbors = []
     for i in [x-1, x+1]:
         if i < 0: i = 0
@@ -104,31 +103,56 @@ def checkFreeNeighbors(pixels, x, y, width, height):
     return free_neighbors
 
 
-def checkNeighborsAverage(pixels, x, y, radius, width, height):
+def checkNeighborsAverage(pixels, x, y, width, height):
     average = [0, 0, 0]
     total_dist = 0
-
-    searched = set()
-    searched.add((x, y))
+    radius = 5
+    found = 0
+    searched = []
+    searched.append((x, y))
 
     for i in range(x - radius, x + radius + 1):
-        if i < 0: i = 0
-        elif i >= width: i = width - 1
+        if i < 0 or i >= width:
+            continue
+
         for j in range(y - radius, y + radius + 1):
-            if j < 0: j = 0
-            elif j >= height: j = height - 1
+            if j < 0 or j >= height:
+                continue
+
             if (i, j) not in searched:
                 if pixels[i][j]:
-                    dist = (abs(i - x) + abs(j - y)) ** 2
-                    total_dist += dist
                     for p in range(3):
-                        average[p] += pixels[i][j][p] * dist
+                        average[p] += pixels[i][j][p]
+                        found += 1
+                searched.append((x, y))
 
-    if total_dist > 0: # we found at least one pixel
-        average = [a / total_dist for a in average]
+    if found > 0:
+        average = [a / found for a in average]
     else:
         average = None
+
     return average
+
+
+def findNextPixels(pixels, x, y, width, height):
+    next = []
+    radius = 1
+
+     for i in [x - radius, x + radius]:
+        if i < 0 or i >= width:
+            continue
+
+        if not pixels[i][y]:
+            next.append((i, y))
+
+    for j in [y - radius, y + radius]:
+        if j < 0 or j >= height:
+            continue
+
+        if not pixels[x][j]:
+            next.append((x, j))
+
+    return next
 
 
 def findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height):
@@ -163,39 +187,47 @@ def findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height):
             search_size += 1
     return nx, ny, nz
 
+
 def populatePixels(colors, pixels, width, height, step):
     started = datetime.now()
     placed_pixels = 0
     percent = 0
     last_percent = None
-    pixel_radius = 15
+    place_radius = 0
     image_size = width * height
     x, y = int(width/2), int(height/2) # pixel position
-    cx, cy, cz = 0, 0, 0 # color coordinates
 
-    backtrack_pixels = set()
+    pixels_queue = []
+    backtrack_pixels = []
 
-    random.shuffle(colors)
     while placed_pixels < image_size:
         if not pixels[x][y]:
-            average = checkNeighborsAverage(pixels, x, y, pixel_radius, width, height)
-
+            average = checkNeighborsAverage(pixels, x, y, width, height)
             if average:
                 average_color = Color(average[0], average[1], average[2])
                 cx, cy, cz = findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height)
+            else:
+                cx = 0
+                cy = 0
+                cz = 0
 
             pixels[x][y] = colors[cx][cy][cz].RGB
             colors[cx][cy][cz] = None
+            backtrack_pixels.append((x, y))
             placed_pixels += 1
 
-        free_neighbors = checkFreeNeighbors(pixels, x, y, width, height)
+        if placed_pixels == image_size: # THIS IS SO FUCKING UGLY I CAN'T EVEN
+            break
 
-        if len(free_neighbors) > 0:
-            backtrack_pixels.add((x, y))
+        if len(pixels_queue) == 0:
+            pixels_queue = findNextPixels(pixels, x, y, width, height)
+            random.shuffle(pixels_queue)
+
+        if not pixels_queue:
+            next_position = backtrack_pixels.pop(0)
         else:
-            backtrack_pixels.remove((x, y))
+            next_position = pixels_queue.pop(0)
 
-        next_position = random.choice(free_neighbors)
         x = next_position[0]
         y = next_position[1]
 
@@ -211,7 +243,7 @@ def populatePixels(colors, pixels, width, height, step):
                 elapsed_hours = int(elapsed_minutes / 60)
 
                 total = 100 / percent * elapsed_seconds
-                remaining_seconds = int(total - elapsed_seconds) 
+                remaining_seconds = int(total - elapsed_seconds)
                 remaining_minutes = int(remaining_seconds / 60)
                 remaining_hours = int(remaining_minutes / 60)
 
@@ -243,7 +275,6 @@ def populatePixels(colors, pixels, width, height, step):
     else:
         print(f"{elapsed_seconds} seconds")
 
-    print(len(backtrack_pixels))
     return pixels
 
 def generateImage(pixels, width, height):
