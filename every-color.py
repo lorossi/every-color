@@ -1,20 +1,28 @@
-import random
+# Made by Lorenzo Rossi - 2020
+# www.lorenzoros.si
+# quarantine sucks
+
 import time
-from datetime import datetime
-from PIL import Image
+import random
+import logging
+import argparse
+
 from math import sqrt
+from PIL import Image
+from datetime import datetime
 
 
 # calculates the size of the finale image according to the number of colors
 def calculateSize(colors):
     # as long as the number of color makes sense, this will work
-    if sqrt(colors ** 3).is_integer():
+    full_size = int(colors ** 3)
+    if sqrt(full_size).is_integer():
         width = int(sqrt(colors ** 3))
         height = int(sqrt(colors ** 3))
     else:
-        # this is cheaty but it works
-        width = 256
-        height = 128
+        # in case the image is not a square
+        width = int(sqrt(full_size / 2))
+        height = int(full_size / width)
     return width, height
 
 
@@ -26,7 +34,7 @@ def generateColors(bits):
     # total number of for steps
     total_steps = int(256/step)
     # generate an empty 3d list
-    colors = [[ [None for b in range(total_steps)] for h in range(total_steps)] for r in range(total_steps)]
+    colors = [[[None for b in range(total_steps)] for h in range(total_steps)] for r in range(total_steps)]
 
     for r in range(0, total_steps):
         for g in range(0, total_steps):
@@ -119,8 +127,6 @@ def findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height, s
     # we proceed by gradually incrasing the cube radius to find the coordinates
     # of the most similar color. This saves A LOT of time (from ~10 hours to
     # ~5 minutes
-
-
     colors_len = len(colors)
     distances = [abs(cx - colors_len), abs(cy - colors_len), abs(cz - colors_len)]
     max_dist = max(distances)
@@ -166,7 +172,7 @@ def findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height, s
 
 
 # populate the pixels container
-def populatePixels(colors, pixels, width, height, step):
+def populatePixels(start_position, start_color, colors, pixels, width, height, step):
     # keep track of how much it takes
     started = datetime.now()
     # search radius for average pixel color
@@ -180,14 +186,19 @@ def populatePixels(colors, pixels, width, height, step):
     last_percent = None
 
     # starting pixel position
-    x, y = random.randint(0, width - 1),  random.randint(0, height - 1)
+    if start_position == "center":
+        x, y = int(width / 2), int(height / 2)
+    elif start_position == "corner":
+        x, y = 0, 0
+    elif start_position == "random":
+        x, y = random.randint(0, width - 1),  random.randint(0, height - 1)
 
     # pixels to be filled
     pixels_queue = []
     # past filled pixels
     backtrack_pixels = []
 
-    print("Pixel placing started. Warning: this script is fast at the beginning but very slow at the end. Don't worry, let it run")
+    logging.info("pixel placing started. Warning: this script is fast at the beginning but very slow at the end. Don't worry, let it run")
     # while not all the pixels have been placed
     while placed_pixels < image_size:
         # if this pixel has not been placed (only happens the first iteration)
@@ -197,9 +208,19 @@ def populatePixels(colors, pixels, width, height, step):
                 cx, cy, cz = findClosestColor(pixels, cx, cy, cz, colors, average_color, step, width, height)
             else:
                 # this happens only when the program is first ran
-                cx = random.randint(0, len(colors) - 1)
-                cy = random.randint(0, len(colors) - 1)
-                cz = random.randint(0, len(colors) - 1)
+                # starting color value
+                if start_color == "white":
+                    cx = len(colors) - 1
+                    cy = len(colors) - 1
+                    cz = len(colors) - 1
+                elif start_color == "black":
+                    cx = 0
+                    cy = 0
+                    cz = 0
+                elif start_color == "random":
+                    cx = random.randint(0, len(colors) - 1)
+                    cy = random.randint(0, len(colors) - 1)
+                    cz = random.randint(0, len(colors) - 1)
 
             # set the current pixel with the new color
             pixels[x][y] = colors[cx][cy][cz]
@@ -210,9 +231,9 @@ def populatePixels(colors, pixels, width, height, step):
             # update the number of placed pixels
             placed_pixels += 1
 
-        # this is ugly...
+        # this is ugly... but i don't know how to make it prettier
         if placed_pixels <= image_size:
-            # check if we have pixels still inside the queue
+           # check if we have pixels still inside the queue
             if len(pixels_queue) == 0:
                 # if we don't, find the possible pixels
                 pixels_queue = findNextPixels(pixels, x, y, width, height)
@@ -223,7 +244,7 @@ def populatePixels(colors, pixels, width, height, step):
             if not pixels_queue:
                 # if no pixels are available, we go back to the most recent
                 # placed pixel
-                next_position = backtrack_pixels.pop(-1)
+                next_position = backtrack_pixels.pop(0)
             else:
                 # otherwise, pick a pixel from the queue (randomly, as it is
                 # shuffled when generated)
@@ -233,31 +254,31 @@ def populatePixels(colors, pixels, width, height, step):
             x = next_position[0]
             y = next_position[1]
 
-            # update percent
-            percent = int(placed_pixels / image_size * 100)
-            if percent != last_percent:
-                # update last percent value
-                last_percent = percent
-                # calculate elapsed time
-                elapsed_seconds = int((datetime.now() - started).total_seconds())
-                elapsed_minutes = int(elapsed_seconds / 60)
-                elapsed_hours = int(elapsed_minutes / 60)
-
-                print(f"Progress: {percent}%, elapsed: ", end="")
-
-                if elapsed_hours > 0:
-                    print(f"{elapsed_hours} hours")
-                elif elapsed_minutes > 0:
-                    print(f"{elapsed_minutes} minutes")
-                else:
-                    print(f"{elapsed_seconds} seconds")
+        # update percent
+        percent = int(placed_pixels / image_size * 100)
+        if percent != last_percent:
+            # update last percent value
+            last_percent = percent
+            # calculate elapsed time
+            elapsed_seconds = int((datetime.now() - started).total_seconds())
+            elapsed_minutes = int(elapsed_seconds / 60)
+            elapsed_hours = int(elapsed_minutes / 60)
+            # string that will be logged
+            log_string = f"Progress: {percent}%, elapsed: "
+            # elapsed time in a correct fashion
+            if elapsed_hours > 0:
+                log_string += f"{elapsed_hours} hours"
+            elif elapsed_minutes > 0:
+                log_string += f"{elapsed_minutes} minutes"
+            else:
+                log_string += f"{elapsed_seconds} seconds"
+            # it's time to log!
+            logging.info(log_string)
 
     # total elapsed time
     elapsed_seconds = int((datetime.now() - started).total_seconds())
-    # yay we finished!
-    print(f"Completed! It took {elapsed_seconds} seconds")
 
-    return pixels
+    return pixels, elapsed_seconds
 
 
 # generates the image by dumping the pixels into a png
@@ -272,18 +293,68 @@ def generateImage(pixels, width, height):
 
 # save image to file
 def saveImage(image, path="", filename="everycolor"):
-    image.save(f"{path}{filename}.png")
+    full_path = f"{path}{filename}.png"
+    image.save(full_path)
+    return full_path
 
 
 def main():
+    # arguments parsing
+    parser = argparse.ArgumentParser(description="Generate an image with all the possible colors in the RGB colorspace")
+    parser.add_argument("-b", "--bits", type=int, help="image depth bits (defaults to 15)", default=15)
+    parser.add_argument("-n", "--number", type=int, help="number of images to generate (defaults to 1)", default=1)
+    parser.add_argument("-p", "--startposition", action="store", choices=["center", "corner", "random"], default="random", help="location of the first bit (defaults to random)")
+    parser.add_argument("-c", "--startcolor", action="store", choices=["white", "black", "random"], default="random", help="color of the first bit (defaults to center)")
+    parser.add_argument("-o", "--output", type=str, default="output/", help="output path (defaults to output/) make sure that the path exists")
+    parser.add_argument("-l", "--log", action="store", choices=["file", "console"], default="file", help="log destination (defaults to file)")
+    args = parser.parse_args()
+
+    # logging setup
+    if args.log == "file":
+        logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO, filename="every-color.log", filemode="w+")
+        print(f"Logging in every-color.log")
+    else:
+        logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO)
+
+    logging.info("script started")
     # color depth
-    color_bits = 15
-    colors, step = generateColors(color_bits)
-    width, height = calculateSize(len(colors))
-    pixels = generateEmptyPixels(width, height)
-    pixels = populatePixels(colors, pixels, width, height, step)
-    im = generateImage(pixels, width, height)
-    saveImage(im)
+    color_bits = args.bits
+    if color_bits % 3 != 0:
+        logging.error("The bit number must be dibisible by 3")
+        return
+
+    images_to_generate = args.number
+    for x in range(images_to_generate):
+        logging.info(f"started generating image {x+1}/{images_to_generate}")
+        # random seeding
+        random.seed(datetime.now())
+        # filename generation
+        now = datetime.now().strftime("%Y%m%d-%H%M%S")
+        filename = f"{now}-every-color"
+        path = args.output
+        logging.info(f"basic setup completed, generating image with {color_bits} bits")
+
+        colors, step = generateColors(color_bits)
+        logging.info("colors generated")
+
+        width, height = calculateSize(len(colors))
+        logging.info(f"size calculated, generating a {width} by {height} image")
+
+        pixels = generateEmptyPixels(width, height)
+        logging.info("empty pixels container generated")
+
+        start_position = args.startposition
+        start_color = args.startcolor
+        pixels, seconds = populatePixels(start_position, start_color, colors, pixels, width, height, step)
+        logging.info(f"pixel placing completed! It took {seconds} seconds")
+
+        im = generateImage(pixels, width, height)
+        logging.info("image generated")
+
+        full_path = saveImage(im, path=path, filename=filename)
+        logging.info(f"image saved: {full_path}")
+
+        logging.info("script ended")
 
 
 if __name__ == '__main__':
