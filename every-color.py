@@ -63,35 +63,32 @@ class Color:
         return self.h
 
 def calculateSize(colors):
-    if sqrt(colors).is_integer():
-        width = int(sqrt(colors))
-        height = int(sqrt(colors))
+    if sqrt(colors ** 3).is_integer():
+        width = int(sqrt(colors ** 3))
+        height = int(sqrt(colors ** 3))
 
     else:
         width = 256
         height = 128
     return width, height
 
-def generateColors(bit_depth):
-    colors = []
-    step = int(256 / ( 2 ** (bit_depth / 3)))
+def generateColors(bits):
+    step = int(256 / ( 2 ** (bits / 3)))
+    total_steps = int(256/step)
+    colors = [[ [None for b in range(total_steps)] for h in range(total_steps)] for r in range(total_steps)]
 
-    for r in range(0, 256, step):
-        for g in range(0, 256, step):
-            for b in range(0, 256, step):
-                new_color = Color(r, g, b)
-                colors.append(new_color)
-    print(len(colors))
-    return colors
+    for r in range(0, total_steps):
+        for g in range(0, total_steps):
+            for b in range(0, total_steps):
+                new_color = Color(r * step, g * step, b * step)
+                colors[r][g][b] = new_color
+    return colors, step
 
 def generateEmptyPixels(width, height):
     pixels = [[None for y in range(height)] for x in range(width)]
     return pixels
 
-def checkFreeNeighbors(pixels, x, y, radius):
-    width = len(pixels)
-    height = len(pixels[0])
-
+def checkFreeNeighbors(pixels, x, y, radius, width, height):
     free_neighbors = []
     for nx in range(x - radius, x + radius + 1):
         for ny in range(y - radius, y + radius + 1):
@@ -102,10 +99,7 @@ def checkFreeNeighbors(pixels, x, y, radius):
     return(free_neighbors)
 
 
-def checkPopulatedNeighbors(pixels, x, y, radius):
-    width = len(pixels)
-    height = len(pixels[0])
-
+def checkPopulatedNeighbors(pixels, x, y, radius, width, height):
     populated_neighbors = []
     for nx in range(x - radius, x + radius + 1):
         for ny in range(y - radius, y + radius + 1):
@@ -116,28 +110,24 @@ def checkPopulatedNeighbors(pixels, x, y, radius):
     return populated_neighbors
 
 
-def populatePixels(colors, pixels):
+def populatePixels(colors, pixels, width, height, step):
     started = datetime.now()
     placed_pixels = 0
     percent = 0
     last_percent = None
 
+    min_dist_sq = step ** 2
+
     pixel_radius = 1
-    max_diff = 180
-
-    width = len(pixels)
-    height = len(pixels[0])
     image_size = width * height
-
-    x, y = int(width/2), int(height/2)
+    colors_len = len(colors)
+    x, y = int(width/2), int(height/2) # pixel position
+    cx, cy, cz = 0, 0, 0 # color coordinates
 
     backtrack_pixels = []
-    #free_pixels = [(x, y) for x in range(width) for y in range(height)]
-
-    random.shuffle(colors)
-    while len(colors) > 0:
+    while placed_pixels < image_size:
         if not pixels[x][y]:
-            populated_neighbors = checkPopulatedNeighbors(pixels, x, y, pixel_radius)
+            populated_neighbors = checkPopulatedNeighbors(pixels, x, y, pixel_radius, width, height)
 
             if len(populated_neighbors) > 0:
                 average = [0 for x in range(3)]
@@ -147,44 +137,60 @@ def populatePixels(colors, pixels):
                     average[a] /= len(populated_neighbors)
 
                 average_color = Color(average[0], average[1], average[2])
-                average_hue = average_color.hue
-                lower_dist_sq = None
-                color_index = 0
 
-                for i in range(len(colors)):
-                    current_color = colors[i]
-                    """diff = average_hue - current_color.hue
-                    if diff > max_diff or diff < -max_diff:
-                        continue"""
+                shortest_dist_sq = None
+                nx, ny, nz = 0, 0, 0 # new color coordinates
 
-                    distance_sq = average_color.distanceSq(current_color)
-                    if not lower_dist_sq or distance_sq < lower_dist_sq:
-                        color_index = i
-                        lower_dist_sq = distance_sq
+                color_picked = False
+                search_size = 1
 
-                if (lower_dist_sq == None): print("WTF", len(colors))
+                searched = set()
+                searched.add((cx, cy, cz))
+
+                while not color_picked:
+                    for i in range(cx - search_size, cx + search_size + 1):
+                        if i < 0: i = 0
+                        elif i >= colors_len: i = colors_len - 1
+                        for j in range(cy - search_size, cy + search_size + 1):
+                            if j < 0: j = 0
+                            elif j >= colors_len: j = colors_len - 1
+                            for k in range(cz - search_size, cz + search_size + 1):
+                                if k < 0: k = 0
+                                elif k >= colors_len: k = colors_len - 1
+                                if (i, j, k) not in searched and colors[i][j][k]:
+                                    searched.add((i, j, k))
+                                    dist_sq = average_color.distanceSq(colors[i][j][k])
+                                    if not shortest_dist_sq or dist_sq <= shortest_dist_sq:
+                                        shortest_dist_sq = dist_sq
+                                        nx = i
+                                        ny = j
+                                        nz = k
+                                        color_picked = True
+
+                        search_size += 1
+                cx = nx
+                cy = ny
+                cz = nz
 
             else:
-                color_index = 0
+                nx, ny, nz = 0, 0, 0
 
-            pixels[x][y] = colors.pop(color_index).RGB
+            pixels[x][y] = colors[cx][cy][cz].RGB
+            colors[cx][cy][cz] = None
             placed_pixels += 1
             backtrack_pixels.append((x, y))
-            #free_pixels.remove((x, y))
 
-        free_neighbors = checkFreeNeighbors(pixels, x, y, pixel_radius)
-        if len(free_neighbors) > 0:
+        free_neighbors = checkFreeNeighbors(pixels, x, y, pixel_radius, width, height)
+        if len(free_neighbors) > 1:
             next_position = random.choice(free_neighbors)
-            x = next_position[0]
-            y = next_position[1]
-
+        elif len(free_neighbors) == 1:
+            next_position = free_neighbors[0]
         else:
-            #backtrack_index = random.randint(0, len(backtrack_pixels) - 1)
-            #next_position = backtrack_pixels.pop(backtrack_index)
+            random_index = random.randint(0, len(backtrack_pixels) - 1)
+            next_position = backtrack_pixels.pop(random_index)
 
-            next_position = backtrack_pixels.pop(-1)
-            x = next_position[0]
-            y = next_position[1]
+        x = next_position[0]
+        y = next_position[1]
 
         percent = int(placed_pixels / image_size * 100)
         if percent != last_percent:
@@ -232,9 +238,7 @@ def populatePixels(colors, pixels):
 
     return pixels
 
-def generateImage(pixels):
-    width = len(pixels)
-    height = len(pixels[0])
+def generateImage(pixels, width, height):
     im = Image.new("RGB", (width, height))
 
     for x in range(width):
@@ -242,6 +246,8 @@ def generateImage(pixels):
             if not pixels[x][y]:
                 pixels[x][y] = (0, 0, 0)
                 print("pixel", x, y, "is empty")
+            #else:
+                #print(pixels[x][y])
             im.putpixel((x, y), pixels[x][y])
     return im
 
@@ -250,15 +256,13 @@ def saveImage(image, path="", filename="everycolor"):
 
 
 def main():
-    color_bits = 15
-    colors = generateColors(color_bits)
+    color_bits = 18
+    colors, step = generateColors(color_bits)
     width, height = calculateSize(len(colors))
     pixels = generateEmptyPixels(width, height)
-    pixels = populatePixels(colors, pixels)
-    im = generateImage(pixels)
+    pixels = populatePixels(colors, pixels, width, height, step)
+    im = generateImage(pixels, width, height)
     saveImage(im)
-
-
 
 
 if __name__ == '__main__':
