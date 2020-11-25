@@ -138,7 +138,7 @@ def findNextPixels(pixels, x, y, width, height):
     next = []
     radius = 1
 
-     for i in [x - radius, x + radius]:
+    for i in [x - radius, x + radius]:
         if i < 0 or i >= width:
             continue
 
@@ -295,7 +295,7 @@ def saveImage(image, path="", filename="everycolor"):
 
 
 def main():
-    color_bits = 12
+    color_bits = 15
     colors, step = generateColors(color_bits)
     width, height = calculateSize(len(colors))
     pixels = generateEmptyPixels(width, height)
