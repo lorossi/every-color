@@ -88,107 +88,114 @@ def generateEmptyPixels(width, height):
     pixels = [[None for y in range(height)] for x in range(width)]
     return pixels
 
-def checkFreeNeighbors(pixels, x, y, radius, width, height):
+def checkFreeNeighbors(pixels, x, y, width, height):
+
     free_neighbors = []
-    for nx in range(x - radius, x + radius + 1):
-        for ny in range(y - radius, y + radius + 1):
-            if nx >= 0 and nx < width and ny >= 0 and ny < height and (x, y) != (nx, ny):
-                if not pixels[nx][ny]:
-                    free_neighbors.append((nx, ny))
+    for i in [x-1, x+1]:
+        if i < 0: i = 0
+        elif i >= width: i = width - 1
+        free_neighbors.append((i, y))
 
-    return(free_neighbors)
+    for j in [y-1, y+1]:
+        if j < 0: j = 0
+        elif j >= height: j = height - 1
+        free_neighbors.append((x, j))
+
+    return free_neighbors
 
 
-def checkPopulatedNeighbors(pixels, x, y, radius, width, height):
-    populated_neighbors = []
-    for nx in range(x - radius, x + radius + 1):
-        for ny in range(y - radius, y + radius + 1):
-            if nx >= 0 and nx < width and ny >= 0 and ny < height and (x, y) != (nx, ny):
-                if pixels[nx][ny]:
-                    populated_neighbors.append(pixels[nx][ny])
+def checkNeighborsAverage(pixels, x, y, radius, width, height):
+    average = [0, 0, 0]
+    total_dist = 0
 
-    return populated_neighbors
+    searched = set()
+    searched.add((x, y))
 
+    for i in range(x - radius, x + radius + 1):
+        if i < 0: i = 0
+        elif i >= width: i = width - 1
+        for j in range(y - radius, y + radius + 1):
+            if j < 0: j = 0
+            elif j >= height: j = height - 1
+            if (i, j) not in searched:
+                if pixels[i][j]:
+                    dist = (abs(i - x) + abs(j - y)) ** 2
+                    total_dist += dist
+                    for p in range(3):
+                        average[p] += pixels[i][j][p] * dist
+
+    if total_dist > 0: # we found at least one pixel
+        average = [a / total_dist for a in average]
+    else:
+        average = None
+    return average
+
+
+def findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height):
+    colors_len = len(colors)
+    searched = set()
+    searched.add((cx, cy, cz))
+
+    color_picked = False
+    search_size = 1
+    shortest_dist_sq = None
+    nx, ny, nz = 0, 0, 0 # new color coordinates
+    while not color_picked:
+        for i in range(cx - search_size, cx + search_size + 1):
+            if i < 0: i = 0
+            elif i >= colors_len: i = colors_len - 1
+            for j in range(cy - search_size, cy + search_size + 1):
+                if j < 0: j = 0
+                elif j >= colors_len: j = colors_len - 1
+                for k in range(cz - search_size, cz + search_size + 1):
+                    if k < 0: k = 0
+                    elif k >= colors_len: k = colors_len - 1
+                    if (i, j, k) not in searched and colors[i][j][k]:
+                        searched.add((i, j, k))
+                        dist_sq = average_color.distanceSq(colors[i][j][k])
+                        if not shortest_dist_sq or dist_sq <= shortest_dist_sq:
+                            shortest_dist_sq = dist_sq
+                            nx = i
+                            ny = j
+                            nz = k
+                            color_picked = True
+
+            search_size += 1
+    return nx, ny, nz
 
 def populatePixels(colors, pixels, width, height, step):
     started = datetime.now()
     placed_pixels = 0
     percent = 0
     last_percent = None
-
-    min_dist_sq = step ** 2
-
-    pixel_radius = 1
+    pixel_radius = 15
     image_size = width * height
-    colors_len = len(colors)
     x, y = int(width/2), int(height/2) # pixel position
     cx, cy, cz = 0, 0, 0 # color coordinates
 
-    backtrack_pixels = []
+    backtrack_pixels = set()
+
+    random.shuffle(colors)
     while placed_pixels < image_size:
         if not pixels[x][y]:
-            populated_neighbors = checkPopulatedNeighbors(pixels, x, y, pixel_radius, width, height)
+            average = checkNeighborsAverage(pixels, x, y, pixel_radius, width, height)
 
-            if len(populated_neighbors) > 0:
-                average = [0 for x in range(3)]
-                for a in range(3):
-                    for p in populated_neighbors:
-                        average[a] += p[a]
-                    average[a] /= len(populated_neighbors)
-
+            if average:
                 average_color = Color(average[0], average[1], average[2])
-
-                shortest_dist_sq = None
-                nx, ny, nz = 0, 0, 0 # new color coordinates
-
-                color_picked = False
-                search_size = 1
-
-                searched = set()
-                searched.add((cx, cy, cz))
-
-                while not color_picked:
-                    for i in range(cx - search_size, cx + search_size + 1):
-                        if i < 0: i = 0
-                        elif i >= colors_len: i = colors_len - 1
-                        for j in range(cy - search_size, cy + search_size + 1):
-                            if j < 0: j = 0
-                            elif j >= colors_len: j = colors_len - 1
-                            for k in range(cz - search_size, cz + search_size + 1):
-                                if k < 0: k = 0
-                                elif k >= colors_len: k = colors_len - 1
-                                if (i, j, k) not in searched and colors[i][j][k]:
-                                    searched.add((i, j, k))
-                                    dist_sq = average_color.distanceSq(colors[i][j][k])
-                                    if not shortest_dist_sq or dist_sq <= shortest_dist_sq:
-                                        shortest_dist_sq = dist_sq
-                                        nx = i
-                                        ny = j
-                                        nz = k
-                                        color_picked = True
-
-                        search_size += 1
-                cx = nx
-                cy = ny
-                cz = nz
-
-            else:
-                nx, ny, nz = 0, 0, 0
+                cx, cy, cz = findClosestColor(pixels, cx, cy, cz, colors, average_color, width, height)
 
             pixels[x][y] = colors[cx][cy][cz].RGB
             colors[cx][cy][cz] = None
             placed_pixels += 1
-            backtrack_pixels.append((x, y))
 
-        free_neighbors = checkFreeNeighbors(pixels, x, y, pixel_radius, width, height)
-        if len(free_neighbors) > 1:
-            next_position = random.choice(free_neighbors)
-        elif len(free_neighbors) == 1:
-            next_position = free_neighbors[0]
+        free_neighbors = checkFreeNeighbors(pixels, x, y, width, height)
+
+        if len(free_neighbors) > 0:
+            backtrack_pixels.add((x, y))
         else:
-            random_index = random.randint(0, len(backtrack_pixels) - 1)
-            next_position = backtrack_pixels.pop(random_index)
+            backtrack_pixels.remove((x, y))
 
+        next_position = random.choice(free_neighbors)
         x = next_position[0]
         y = next_position[1]
 
@@ -204,7 +211,7 @@ def populatePixels(colors, pixels, width, height, step):
                 elapsed_hours = int(elapsed_minutes / 60)
 
                 total = 100 / percent * elapsed_seconds
-                remaining_seconds = int(total - elapsed_seconds)
+                remaining_seconds = int(total - elapsed_seconds) 
                 remaining_minutes = int(remaining_seconds / 60)
                 remaining_hours = int(remaining_minutes / 60)
 
@@ -236,6 +243,7 @@ def populatePixels(colors, pixels, width, height, step):
     else:
         print(f"{elapsed_seconds} seconds")
 
+    print(len(backtrack_pixels))
     return pixels
 
 def generateImage(pixels, width, height):
@@ -256,7 +264,7 @@ def saveImage(image, path="", filename="everycolor"):
 
 
 def main():
-    color_bits = 18
+    color_bits = 12
     colors, step = generateColors(color_bits)
     width, height = calculateSize(len(colors))
     pixels = generateEmptyPixels(width, height)
