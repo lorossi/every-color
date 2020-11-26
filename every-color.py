@@ -176,9 +176,10 @@ def find_closest_color(c_x, c_y, c_z, colors, average_color, step):
                     if not shortest_dist_sq or dist_sq <= shortest_dist_sq:
                         # new shortest distance
                         shortest_dist_sq = dist_sq
-                        # if the distance is the least possible (1 step) or
-                        # if the search radius is bigger than the color
-                        # cube, it's time to return the closest color found
+                        # if the distance is the least possible (1 step
+                        # squared) orif the search radius is bigger than the
+                        # color cube, it's time to return the closest color
+                        # that has been found
                         if dist_sq <= min_dist_sq or search_size >= max_dist:
                             color_picked = True
                             n_x = i
