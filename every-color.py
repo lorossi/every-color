@@ -170,7 +170,7 @@ def find_closest_color(c_x, c_y, c_z, colors, average_color, step):
                     # skip if container is empty
                     if not colors[i][j][k]:
                         continue
-                        # evaluate the squared distance
+                    # evaluate the squared distance
                     dist_sq = distance_sq(average_color, colors[i][j][k])
                     # if the distance is tles than the previous distance...
                     if not shortest_dist_sq or dist_sq <= shortest_dist_sq:
