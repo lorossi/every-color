@@ -191,7 +191,9 @@ def find_closest_color(c_x, c_y, c_z, colors, average_color, step):
 
 
 # populate the pixels container
-def populate_pixels(start_position, start_color, colors, pixels, width, height, step):
+def populate_pixels(start_position, start_color, colors, pixels, width, height,
+                    step):
+
     # keep track of how much it takes
     started = datetime.now()
     # search radius for average pixel color
@@ -217,7 +219,7 @@ def populate_pixels(start_position, start_color, colors, pixels, width, height, 
     # past filled pixels
     backtrack_pixels = []
 
-    logging.info("pixel placing started."
+    logging.info("pixel placing started. "
                  "Warning: this script is fast at the beginning but very slow "
                  "as it goes on. Don't worry, just let it run.")
 
@@ -227,9 +229,13 @@ def populate_pixels(start_position, start_color, colors, pixels, width, height, 
         # color coordinates initalization
         c_x, c_y, c_z = 0, 0, 0
         if not pixels[x][y]:
-            average_color = check_neighbors_average(pixels, x, y, search_radius, width, height)
+            average_color = check_neighbors_average(pixels, x, y,
+                                                    search_radius, width,
+                                                    height)
+
             if average_color:
-                c_x, c_y, c_z = find_closest_color(c_x, c_y, c_z, colors, average_color, step)
+                c_x, c_y, c_z = find_closest_color(c_x, c_y, c_z, colors,
+                                                   average_color, step)
             else:
                 # this happens only when the program is first ran
                 # starting color value
@@ -324,13 +330,27 @@ def saveImage(image, path="", filename="everycolor"):
 
 def main():
     # arguments parsing
-    parser = argparse.ArgumentParser(description="Generate an image with all the possible colors in the RGB colorspace")
-    parser.add_argument("-b", "--bits", type=int, help="image depth bits (defaults to 15)", default=15)
-    parser.add_argument("-n", "--number", type=int, help="number of images to generate (defaults to 1)", default=1)
-    parser.add_argument("-p", "--startposition", action="store", choices=["center", "corner", "random"], default="random", help="location of the first bit (defaults to random)")
-    parser.add_argument("-c", "--startcolor", action="store", choices=["white", "black", "random"], default="random", help="color of the first bit (defaults to center)")
-    parser.add_argument("-o", "--output", type=str, default="output/", help="output path (defaults to output/) make sure that the path exists")
-    parser.add_argument("-l", "--log", action="store", choices=["file", "console"], default="file", help="log destination (defaults to file)")
+    parser = argparse.ArgumentParser(description="Generate an image with all"
+                                     " the possible colors in the RGB"
+                                     " colorspace")
+
+    parser.add_argument("-b", "--bits", type=int, help="image depth bits"
+                        " (defaults to 15)", default=15)
+    parser.add_argument("-n", "--number", type=int, help="number of images to"
+                        " generate (defaults to 1)", default=1)
+    parser.add_argument("-p", "--startposition", action="store",
+                        choices=["center", "corner", "random"],
+                        default="random",
+                        help="location of the first bit (defaults to random)")
+    parser.add_argument("-c", "--startcolor", action="store",
+                        choices=["white", "black", "random"], default="random",
+                        help="color of the first bit (defaults to center)")
+    parser.add_argument("-o", "--output", type=str, default="output/",
+                        help="output path (defaults to output/) make sure that"
+                        " the path exists")
+    parser.add_argument("-l", "--log", action="store",
+                        choices=["file", "console"], default="file",
+                        help="log destination (defaults to file)")
     args = parser.parse_args()
 
     # logging setup
@@ -374,7 +394,8 @@ def main():
 
         start_position = args.startposition
         start_color = args.startcolor
-        pixels, seconds = populate_pixels(start_position, start_color, colors, pixels, width, height, step)
+        pixels, seconds = populate_pixels(start_position, start_color, colors,
+                                          pixels, width, height, step)
         logging.info("pixel placing completed! It took %s seconds", seconds)
 
         im = generate_image(pixels, width, height)
