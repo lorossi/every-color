@@ -226,7 +226,8 @@ def populate_pixels(start_position, start_color, colors, pixels, width,
             x = pixel[0]
             y = pixel[1]
 
-            # if this pixel has not been placed (only happens the first iteration)
+            # if this pixel has not been placed
+            # only happens the first iteration
             if not pixels[x][y]:
                 average_color = check_neighbors_average(pixels, x, y,
                                                         search_radius, width,
@@ -257,11 +258,18 @@ def populate_pixels(start_position, start_color, colors, pixels, width,
                 # update the number of placed pixels
                 placed_pixels += 1
 
-                new_pixels_queue = find_next_pixels(pixels, x, y, width, height)
+                new_pixels_queue = find_next_pixels(pixels, x, y,
+                                                    width, height)
+                # check if any pixel was added
+                added = False
                 for new_pixel in new_pixels_queue:
                     if new_pixel not in pixels_queue:
                         pixels_queue.append(new_pixel)
-                random.shuffle(pixels_queue)
+                        added = True
+
+                # if at least one was added, shuffle the array
+                if added:
+                    random.shuffle(pixels_queue)
 
                 # update percent
                 percent = placed_pixels / image_size * 100
@@ -273,9 +281,11 @@ def populate_pixels(start_position, start_color, colors, pixels, width,
                     last_progress_str = format(last_progress, '.2f')
                     progress_pixels = [p[:] for p in pixels]
                     im = generate_image(progress_pixels, width, height)
-                    logging.info(f"progress image at {last_progress}%% generated")
+                    logging.info(f"progress image at {last_progress}"
+                                 "%% generated")
                     progress_filename = f"{filename}-progress-{last_progress_str}"
-                    full_path = save_image(im, path=path, filename=progress_filename)
+                    full_path = save_image(im, path=path,
+                                           filename=progress_filename)
                     logging.info(f"progress image saved: {full_path}")
 
                 # update logging
