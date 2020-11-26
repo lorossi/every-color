@@ -6,6 +6,7 @@ import random
 import logging
 import argparse
 
+from pathlib import Path
 from math import sqrt
 from PIL import Image
 from datetime import datetime
@@ -186,7 +187,7 @@ def find_closest_color(cx, cy, cz, average_color, colors, step):
 
 # populate the pixels container
 def populate_pixels(start_position, start_color, colors, pixels, width,
-                    height, step):
+                    height, step, progresspics, path, filename):
 
     # keep track of how much it takes
     started = datetime.now()
@@ -199,6 +200,7 @@ def populate_pixels(start_position, start_color, colors, pixels, width,
     # progress calculation
     percent = 0
     last_percent = None
+    last_progress = 0
 
     # starting pixel position
     if start_position == "center":
@@ -277,16 +279,29 @@ def populate_pixels(start_position, start_color, colors, pixels, width,
             y = next_position[1]
 
         # update percent
-        percent = int(placed_pixels / image_size * 100)
-        if percent != last_percent:
-            # update last percent value
-            last_percent = percent
+        percent = round(placed_pixels / image_size * 100, 2)
+        # is it time to save a progress pic yet?
+        if progresspics and percent - last_progress >= 0.25:
+            last_progress = round(percent * 4) / 4  # round to quarters
+            last_progress = format(last_progress, '.2f')  # .5 -> .50, etc
+            # yes it is
+            print(last_progress)
+            progress_pixels = [p[:] for p in pixels]
+            im = generate_image(progress_pixels, width, height)
+            logging.info(f"progress image at {last_progress}%% generated")
+            progress_filename = f"{filename}-progress-{last_progress}"
+            full_path = save_image(im, path=path, filename=progress_filename)
+            logging.info(f"progress image saved: {full_path}")
+
+        # update logging
+        if percent % 1 == 0 and percent != last_percent:
+            last_percent = int(percent)
             # calculate elapsed time
             elapsed_seconds = int((datetime.now() - started).total_seconds())
             elapsed_minutes = int(elapsed_seconds / 60)
             elapsed_hours = int(elapsed_minutes / 60)
             # string that will be logged
-            log_string = f"Progress: {percent}%, elapsed: "
+            log_string = f"Progress: {int(percent)}%, elapsed: "
 
             # elapsed time in a correct fashion
             if elapsed_hours > 0:
@@ -305,18 +320,21 @@ def populate_pixels(start_position, start_color, colors, pixels, width,
 
 
 # generates the image by dumping the pixels into a png
-def generate_image(pixels, width, height):
-    im = Image.new("RGB", (width, height))
+def generate_image(pixels, width, height, default_color=(0, 0, 0)):
+    image = Image.new("RGB", (width, height))
     # loop throught pixels list
     for x in range(width):
         for y in range(height):
-            im.putpixel((x, y), pixels[x][y])
-    return im
+            if not pixels[x][y]:
+                pixels[x][y] = default_color
+            image.putpixel((x, y), pixels[x][y])
+    return image
 
 
 # save image to file
 def save_image(image, path="", filename="everycolor"):
-    full_path = f"{path}{filename}.png"
+    Path(path).mkdir(parents=True, exist_ok=True)
+    full_path = f"{path}/{filename}.png"
     image.save(full_path)
     return full_path
 
@@ -339,12 +357,14 @@ def main():
     parser.add_argument("-c", "--startcolor", action="store",
                         choices=["white", "black", "random"], default="white",
                         help="color of the first bit (defaults to white)")
-    parser.add_argument("-o", "--output", type=str, default="output/",
-                        help="output path (defaults to output/)"
+    parser.add_argument("-o", "--output", type=str, default="output",
+                        help="output folder (defaults to output)"
                         " make sure that the path exists")
     parser.add_argument("-l", "--log", action="store",
                         choices=["file", "console"], default="file",
                         help="log destination (defaults to file)")
+    parser.add_argument("--progresspics", action="store_true",
+                        help="saves a picture every 0.25%% of completion")
     args = parser.parse_args()
 
     # logging setup
@@ -389,8 +409,8 @@ def main():
         start_position = args.startposition
         start_color = args.startcolor
         pixels, seconds = populate_pixels(start_position, start_color, colors,
-                                          pixels, width, height, step)
-
+                                          pixels, width, height, step,
+                                          args.progresspics, path, filename)
         logging.info(f"pixel placing completed! It took {seconds} seconds")
 
         im = generate_image(pixels, width, height)
