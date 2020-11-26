@@ -1,5 +1,10 @@
 # Every color
 
+I wanted to generate an image containing every color, so here we go.
+
+## How it works
+
+**TODO**
 
 ## Arguments
 | Command | Description | Defaults | Type | Optional |
@@ -11,3 +16,7 @@
 | `-c --STARTCOLOR` | color of the first bit | `random` | `{white, black, random}` | ✓ |
 | `-o --OUTPUT` | output path | `output/` | `str` | ✓ |
 | `-l --LOG` | log destination | `file` | `{file, console}` | ✓ |
+
+## Outputs
+
+**TODO**
