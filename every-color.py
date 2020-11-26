@@ -123,8 +123,7 @@ def distance_sq(color1, color2):
 
 
 # find the closest rgb color still available according to an average
-def find_closest_color(pixels, cx, cy, cz, colors, average_color, width,
-                       height, step):
+def find_closest_color(cx, cy, cz, average_color, colors, step):
     # the colors are provided in a cube
     # we proceed by gradually incrasing the cube radius to find the coordinates
     # of the most similar color. This saves A LOT of time (from ~10 hours to
@@ -227,9 +226,8 @@ def populate_pixels(start_position, start_color, colors, pixels, width,
                                                     search_radius, width,
                                                     height)
             if average_color:
-                cx, cy, cz = find_closest_color(pixels, cx, cy, cz, colors,
-                                                average_color, step, width,
-                                                height)
+                cx, cy, cz = find_closest_color(cx, cy, cz, average_color,
+                                                colors, step)
             else:
                 # this happens only when the program is first ran
                 # starting color value
@@ -336,11 +334,11 @@ def main():
                         default=1)
     parser.add_argument("-p", "--startposition", action="store",
                         choices=["center", "corner", "random"],
-                        default="random",
-                        help="location of the first bit (defaults to random)")
+                        default="center",
+                        help="location of the first bit (defaults to center)")
     parser.add_argument("-c", "--startcolor", action="store",
-                        choices=["white", "black", "random"], default="random",
-                        help="color of the first bit (defaults to center)")
+                        choices=["white", "black", "random"], default="white",
+                        help="color of the first bit (defaults to white)")
     parser.add_argument("-o", "--output", type=str, default="output/",
                         help="output path (defaults to output/)"
                         " make sure that the path exists")
