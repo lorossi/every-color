@@ -21,8 +21,8 @@ def calculate_size(colors):
         height = int(sqrt(colors ** 3))
     else:
         # in case the image is not a square
-        width = int(sqrt(full_size / 2))
-        height = int(full_size / width)
+        height = int(sqrt(full_size / 2))
+        width = int(full_size / height)
     return width, height
 
 
@@ -192,7 +192,8 @@ def populate_pixels(start_position, start_color, colors, pixels, width,
     # keep track of how much it takes
     started = datetime.now()
     # search radius for average pixel color
-    search_radius = 5
+    # i should make this a parameter too
+    search_radius = 1
 
     # total number of placed pixels and image size
     placed_pixels = 0
@@ -211,9 +212,7 @@ def populate_pixels(start_position, start_color, colors, pixels, width,
         x, y = random.randint(0, width - 1),  random.randint(0, height - 1)
 
     # pixels to be filled
-    pixels_queue = []
-    # past filled pixels
-    backtrack_pixels = []
+    pixels_queue = [(x, y)]
 
     logging.info("pixel placing started. Warning: this script is fast at the "
                  "beginning but very slow at the end."
@@ -222,96 +221,82 @@ def populate_pixels(start_position, start_color, colors, pixels, width,
     cx, cy, cz = 0, 0, 0
     # while not all the pixels have been placed
     while placed_pixels < image_size:
-        # if this pixel has not been placed (only happens the first iteration)
-        if not pixels[x][y]:
-            average_color = check_neighbors_average(pixels, x, y,
-                                                    search_radius, width,
-                                                    height)
-            if average_color:
-                cx, cy, cz = find_closest_color(cx, cy, cz, average_color,
-                                                colors, step)
-            else:
-                # this happens only when the program is first ran
-                # starting color value
-                if start_color == "white":
-                    cx = len(colors) - 1
-                    cy = len(colors) - 1
-                    cz = len(colors) - 1
-                elif start_color == "black":
-                    cx = 0
-                    cy = 0
-                    cz = 0
-                elif start_color == "random":
-                    cx = random.randint(0, len(colors) - 1)
-                    cy = random.randint(0, len(colors) - 1)
-                    cz = random.randint(0, len(colors) - 1)
+        # loop through every pixel inside the queue
+        for pixel in pixels_queue:
+            x = pixel[0]
+            y = pixel[1]
 
-            # set the current pixel with the new color
-            pixels[x][y] = colors[cx][cy][cz]
-            # delete color from colors cube
-            colors[cx][cy][cz] = None
-            # add this pixel to the list of placed pixels
-            backtrack_pixels.append((x, y))
-            # update the number of placed pixels
-            placed_pixels += 1
+            # if this pixel has not been placed (only happens the first iteration)
+            if not pixels[x][y]:
+                average_color = check_neighbors_average(pixels, x, y,
+                                                        search_radius, width,
+                                                        height)
+                if average_color:
+                    cx, cy, cz = find_closest_color(cx, cy, cz, average_color,
+                                                    colors, step)
+                else:
+                    # this happens only when the program is first ran
+                    # starting color value
+                    if start_color == "white":
+                        cx = len(colors) - 1
+                        cy = len(colors) - 1
+                        cz = len(colors) - 1
+                    elif start_color == "black":
+                        cx = 0
+                        cy = 0
+                        cz = 0
+                    elif start_color == "random":
+                        cx = random.randint(0, len(colors) - 1)
+                        cy = random.randint(0, len(colors) - 1)
+                        cz = random.randint(0, len(colors) - 1)
 
-        # this is ugly... but i don't know how to make it prettier
-        if placed_pixels <= image_size:
-            # check if we have pixels still inside the queue
-            if len(pixels_queue) == 0:
-                # if we don't, find the possible pixels
-                pixels_queue = find_next_pixels(pixels, x, y, width, height)
-                # and shuffle them to add some randomness
+                # set the current pixel with the new color
+                pixels[x][y] = colors[cx][cy][cz]
+                # delete color from colors cube
+                colors[cx][cy][cz] = None
+                # update the number of placed pixels
+                placed_pixels += 1
+
+                new_pixels_queue = find_next_pixels(pixels, x, y, width, height)
+                for new_pixel in new_pixels_queue:
+                    if new_pixel not in pixels_queue:
+                        pixels_queue.append(new_pixel)
                 random.shuffle(pixels_queue)
 
-            # check the queue
-            if not pixels_queue:
-                # if no pixels are available, we go back to the most recent
-                # placed pixel
-                next_position = backtrack_pixels.pop(-1)
-            else:
-                # otherwise, pick a pixel from the queue (randomly, as it is
-                # shuffled when generated)
-                next_position = pixels_queue.pop(0)
+                # update percent
+                percent = placed_pixels / image_size * 100
+                # is it time to save a progress pic yet?
+                if progresspics and percent - last_progress >= 0.25:
+                    # yes it is
+                    last_progress = round(percent * 4) / 4  # round to quarters
+                    # .5 -> .50, (add zeroes at the and)
+                    last_progress_str = format(last_progress, '.2f')
+                    progress_pixels = [p[:] for p in pixels]
+                    im = generate_image(progress_pixels, width, height)
+                    logging.info(f"progress image at {last_progress}%% generated")
+                    progress_filename = f"{filename}-progress-{last_progress_str}"
+                    full_path = save_image(im, path=path, filename=progress_filename)
+                    logging.info(f"progress image saved: {full_path}")
 
-            # update coords to next position
-            x = next_position[0]
-            y = next_position[1]
+                # update logging
+                if percent % 1 == 0 and percent != last_percent:
+                    last_percent = int(percent)
+                    # calculate elapsed time
+                    elapsed_seconds = int((datetime.now() - started).total_seconds())
+                    elapsed_minutes = int(elapsed_seconds / 60)
+                    elapsed_hours = int(elapsed_minutes / 60)
+                    # string that will be logged
+                    log_string = f"Progress: {int(percent)}%, elapsed: "
 
-        # update percent
-        percent = round(placed_pixels / image_size * 100, 2)
-        # is it time to save a progress pic yet?
-        if progresspics and percent - last_progress >= 0.25:
-            last_progress = round(percent * 4) / 4  # round to quarters
-            last_progress = format(last_progress, '.2f')  # .5 -> .50, etc
-            # yes it is
-            print(last_progress)
-            progress_pixels = [p[:] for p in pixels]
-            im = generate_image(progress_pixels, width, height)
-            logging.info(f"progress image at {last_progress}%% generated")
-            progress_filename = f"{filename}-progress-{last_progress}"
-            full_path = save_image(im, path=path, filename=progress_filename)
-            logging.info(f"progress image saved: {full_path}")
-
-        # update logging
-        if percent % 1 == 0 and percent != last_percent:
-            last_percent = int(percent)
-            # calculate elapsed time
-            elapsed_seconds = int((datetime.now() - started).total_seconds())
-            elapsed_minutes = int(elapsed_seconds / 60)
-            elapsed_hours = int(elapsed_minutes / 60)
-            # string that will be logged
-            log_string = f"Progress: {int(percent)}%, elapsed: "
-
-            # elapsed time in a correct fashion
-            if elapsed_hours > 0:
-                log_string += f"{elapsed_hours} hours"
-            elif elapsed_minutes > 0:
-                log_string += f"{elapsed_minutes} minutes"
-            else:
-                log_string += f"{elapsed_seconds} seconds"
-            # it's time to log!
-            logging.info(log_string)
+                    # elapsed time in a correct fashion
+                    if elapsed_hours > 0:
+                        log_string += f"{elapsed_hours} hour(s)"
+                    elif elapsed_minutes > 0:
+                        log_string += f"{elapsed_minutes} minute(s)"
+                    else:
+                        log_string += f"{elapsed_seconds} second(s)"
+                    # it's time to log!
+                    logging.info(log_string)
 
     # total elapsed time
     elapsed_seconds = int((datetime.now() - started).total_seconds())
@@ -401,7 +386,7 @@ def main():
 
         width, height = calculate_size(len(colors))
         logging.info(f"size calculated, generating a {width} "
-                     "by {height} image")
+                     f"by {height} image")
 
         pixels = generate_empty_pixels(width, height)
         logging.info("empty pixels container generated")
