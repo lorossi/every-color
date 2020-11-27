@@ -353,8 +353,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
             # grid deep copy
             progress_grid = [g[:] for g in grid]
             image = generate_image(progress_grid)
-            logging.info(f"progress image at {last_saved_str}"
-                         "%% generated")
+            logging.info(f"progress image at {last_saved_str}% generated")
             progress_filename = f"{filename}-progress-{last_saved_str}"
             full_path = save_image(image, path=path,
                                    filename=progress_filename)
@@ -378,22 +377,38 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
             # string that will be logged
             log_string = f"Progress: {int(percent)}%, elapsed: "
 
+            # stop showing plural a plural S when it's singular!
+            suffix = ""
             # elapsed time in a correct fashion
             if elapsed_hours > 0:
-                log_string += f"{elapsed_hours} hour(s)"
+                if elapsed_hours > 1:
+                    suffix = "s"
+                log_string += f"{elapsed_hours} hour{suffix}"
             elif elapsed_minutes > 0:
-                log_string += f"{elapsed_minutes} minute(s)"
+                if elapsed_minutes > 0:
+                    suffix = "s"
+                log_string += f"{elapsed_minutes} minute{suffix}"
             else:
-                log_string += f"{elapsed_seconds} second(s)"
+                if elapsed_seconds > 0:
+                    suffix = "s"
+                log_string += f"{elapsed_seconds} second{suffix}"
 
+            # reset suffix
+            suffix = ""
             log_string += ", remaining: "
             # remaining time in a correct fashion
             if remaining_hours > 0:
-                log_string += f"{remaining_hours} hour(s)"
+                if remaining_hours > 1:
+                    suffix = "s"
+                log_string += f"{remaining_hours} hour{suffix}"
             elif remaining_minutes > 0:
-                log_string += f"{remaining_minutes} minute(s)"
+                if remaining_minutes > 1:
+                    suffix = "s"
+                log_string += f"{remaining_minutes} minute{suffix}"
             else:
-                log_string += f"{remaining_seconds} second(s)"
+                if remaining_seconds > 1:
+                    suffix = "s"
+                log_string += f"{remaining_seconds} second{suffix}"
 
             # it's time to log!
             logging.info(log_string)
@@ -475,18 +490,19 @@ def main():
                         help="number of starting points (defaults to 1). "
                         "Doesn't work if start position is set to center",
                         default=1)
+    parser.add_argument("--seed", type=str, help="random seed", default=None)
 
     args = parser.parse_args()
 
     # logging setup
     if args.log == "file":
         logfile = __file__.replace(".py", ".log")
-        logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s",
+        logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                             level=logging.INFO, filename=logfile,
                             filemode="w+")
         print("Logging in every-color.log")
     else:
-        logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s",
+        logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                             level=logging.INFO)
 
     logging.info("script started")
@@ -497,13 +513,22 @@ def main():
         logging.error("The bit number must be dibisible by 3")
         return
 
+    # random.seed
+    seed = args.seed
+    if not seed:
+        # seed not provided, we use current time (converted to string)
+        seed = str(datetime.now().timestamp())
+
+    random.seed(seed)
+    logging.info(f"seed used for random functions: {seed}")
+
     images_to_generate = args.number
     for x in range(images_to_generate):
         logging.info(f"started generating image {x+1}/{images_to_generate}")
         # random seeding
         random.seed(datetime.now())
         now = datetime.now().strftime("%Y%m%d-%H%M%S")
-        filename = f"{now}-every-color"
+        filename = f"{now}-{__file__.replace('.py', '.png')}"
         path = args.output
         logging.info("basic setup completed, generating image with "
                      f"{bits} bits")
@@ -528,8 +553,14 @@ def main():
                      f"start points: {start_points}, "
                      f"start color: {start_color}, "
                      f"sort color: {sort_colors}, "
+                     f"dist selection: {dist_selection}, "
                      f"saving progress pics: {progress_pics}. "
                      "Starting pixels placement.")
+        logging.info("Keep in mind that the remaining time will not be "
+                     "accurate at least until about half of the progress has "
+                     "gone by. Don't panic, the script is most likely not "
+                     "stuck but very computationally heavy and as such "
+                     "quite slow. Let it run!")
 
         colored_grid, seconds = place_pixels(grid, colors, start_position,
                                              start_points, start_color,

@@ -16,6 +16,13 @@ This is how the script operates:
 6. It loops throught steps 3-5 until all colors are placed
 7. It saves the final image.
 
+## Installation
+
+1. Clone the repository or download the relase
+2. Navigate the folder containing the file named `every-color.py`
+3. Install all the needed dependencies using `pip3 install -r requirements.txt`
+4. Launch the script with the command `python3 every-color.py`. Check below for the availabe options or launch writing `python3 every-color.py -h`
+5. There you go! The image will be generated shortly after.
 
 ## Arguments
 | Command | Description | Defaults | Type |
@@ -31,6 +38,7 @@ This is how the script operates:
 | `--SORTCOLORS` | sort colors before placing them | `random` | `{"hue", "saturation", "brightness", "default", "reverse", "random"}` |
 | `--DISTSELECTION` | select how new colors are selected according to their distance | `min` | `{min, average}` |
 | `--STARTPOINTS` | number of starting points | `1` | `int` |
+| `--SEED` | seed for random function | `epoch time` | `str` |
 
 All arguments are optionals
 
@@ -50,7 +58,7 @@ All arguments are optionals
 
 # Additional infos
 
-The script takes quite a while to generate big pictures (up to about half a day for 24 bits pictures). There isn't much room for optimizations and according to my tests, parallelization won't increase much the speed.
+The script takes quite a while to generate big pictures (up to about half a day for 24 bits pictures). There isn't much room for optimizations and according to my tests, parallelization won't increase much the speed. The most computationally expensive process is searching for a better pixel.
 
 I like PEP8 but 79 characters is definitely not enough.
 
