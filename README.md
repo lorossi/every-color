@@ -30,7 +30,8 @@ All arguments are optionals
 - Generate 2 images starting with from the central pixel and save them in `generated/`: `python3 every-color.py -n 2 -p center -o generated`
 - Generate 1 image starting with white and save 200 progress pics: `python3 every-color.py -c white --progress 200`
 - Generate 1 image sorting all colors by hue: `python3 every-color.py --sortcolors hue`
-- Generate 10 images with 5 random starting points and
+- Generate 10 images with 5 random starting points and average distance selections: `python3 every-color.py -n 5 --startpoints 5 --distselection average`
+
 **TODO**
 
 ## Outputs
