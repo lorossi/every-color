@@ -4,4 +4,4 @@
 4. Generate a video of the progress
 5. ~Better picks for next pixel (sometimes it makes too much of a "noodle on canvas" effect)~ **DONE**
 6. Add some remaining time calculator
-7. Pick more than one pixel at beginning
+7. ~Pick more than one pixel at beginning~ **DONE**

@@ -18,7 +18,7 @@ I wanted to generate an image containing every color, so here we go.
 | `-l --LOG` | log destination | `file` | `{file, console}` | ✓ |
 | `--progresspics` | number of progress pics to be saved | `0` | `int` |
 | `--sortcolors` | sort colors before placing them | `random` | `{"hue", "saturation", "brightness", "default", "reverse", "random"}` |
-| `--distselection` | select how new colors are selected according to their distance | `min` | `{min, average}` | *NOT IMPLEMENTED YET* |
+| `--distselection` | select how new colors are selected according to their distance | `min` | `{min, average}` | 
 | `--startpoints` | number of starting points | `1` | `int` |
 
 All arguments are optionals

@@ -190,7 +190,7 @@ def find_free_neighbors(grid, pixel):
 
 
 # calculates color difference between a color and its neighbors
-def calculate_diff(grid, pixel, color):
+def calculate_diff(grid, pixel, color, dist_selection):
     diffs = []
     width = len(grid)
     height = len(grid[0])
@@ -213,15 +213,19 @@ def calculate_diff(grid, pixel, color):
             if grid[px][py]:
                 # if full
                 diffs.append(color_difference(grid[px][py], color))
-    # average = sum(diffs) / len(diffs)
-    # return average
-    # THIS COULD ALSO WORK
-    return min(diffs)
+
+    if dist_selection == "average":
+        # returns average according to diff
+        average = sum(diffs) / len(diffs)
+        return average
+    elif dist_selection == "min":
+        # returns least diff
+        return min(diffs)
 
 
 # place pixels in grid, effectively creating the image
 def place_pixels(grid, colors, start_position, start_points, start_color,
-                 sort_colors, progress_pics, path, filename):
+                 sort_colors, dist_selection, progress_pics, path, filename):
     # started time
     started = datetime.now()
 
@@ -281,37 +285,38 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
     for i in range(len(colors)):
         c = colors[i]
 
-        if len(available_pixels) == 0:
-            # since we have no available pixels, we gotta pick a first one
-            # this happens the first time ONLY
-
+        if (i < start_points):
+            # pick the first starting points
             # grid size
             width = len(grid)
             height = len(grid[0])
 
-            for j in range(start_points):
-                # place first pixel(s)
-                if start_position == "center" and j == 0:
-                    selected_pixel = Pixel(int(width/2), int(height/2))
-                elif start_position == "corner" and j < 5:
-                    # only the first 4 corners
-                    # bit masking to get corners
-                    x = (j >> 1) & 1
-                    y = (j >> 0) & 1
-                    selected_pixel = Pixel(x * width, y * height)
+            # place first pixel(s)
+            if start_position == "center" and i == 0:
+                # if center, we use only the first one
+                selected_pixel = Pixel(int(width/2), int(height/2))
+            elif start_position == "corner" and i < 5:
+                # only the first 4 corners
+                # bit masking to get corners
+                x = (i >> 1) & 1
+                y = (i >> 0) & 1
+                selected_pixel = Pixel(x * (width - 1), y * (height - 1))
 
-                elif start_position == "random":
-                    selected_pixel = Pixel(random.randrange(width),
-                                           random.randrange(height))
+            elif start_position == "random":
+                # random position
+                selected_pixel = Pixel(random.randrange(width),
+                                       random.randrange(height))
 
-                # we append it to the list of available pixels
-                available_pixels.append(selected_pixel)
+            grid[selected_pixel.x][selected_pixel.y] = c
+            print(selected_pixel.pos)
+            # we append it to the list of available pixels
+            available_pixels.append(selected_pixel)
         else:
-            # look throught every available pixel and find the one with the
-            # least difference with the current color
-            selected_pixel = sorted(available_pixels,
-                                    key=lambda p: calculate_diff(grid, p, c))[0]
-
+            # sort pixels by color difference
+            sorted_pixels = sorted(available_pixels,
+                                   key=lambda p: calculate_diff(grid, p, c, dist_selection))
+            # pick the closest one
+            selected_pixel = sorted_pixels[0]
 
         # put the color on the best pixel on the grid
         grid[selected_pixel.x][selected_pixel.y] = c
@@ -410,32 +415,16 @@ def main():
                                      "the possible colors in the"
                                      " RGB colorspace")
 
-    parser.add_argument("-b", "--bits", type=int,
-                        help="image depth bits (defaults to 15)", default=15)  # OK
-    parser.add_argument("-n", "--number", type=int,
-                        help="number of images to generate (defaults to 1)",
-                        default=1)  # OK
-    parser.add_argument("-p", "--startposition", action="store",
-                        choices=["center", "corner", "random"],
-                        default="center",
-                        help="location of the first pixel "
-                              "(defaults to center)")  # OK
-    parser.add_argument("-c", "--startcolor", action="store",
-                        choices=["white", "black", "random"], default="random",
-                        help="color of the first pixel (defaults to random)")  # OK
-    parser.add_argument("-o", "--output", type=str, default="output",
-                        help="output folder (defaults to output)"
-                        " make sure that the path exists")  # OK
-    parser.add_argument("-l", "--log", action="store",
-                        choices=["file", "console"], default="file",
-                        help="log destination (defaults to file)")  # OK
-    parser.add_argument("--progresspics", type=int,
-                        help="number of progress pics to be saved (defaults to 0)", default=0)  # OK
-    parser.add_argument("--sortcolors", action="store",
-                        choices=["hue", "saturation", "brightness", "default", "reverse", "random"], default="random",
-                        help="sort colors before placing them (defaults to random)") # OK
-    parser.add_argument("--distselection", action="store",choices=["min", "average"], default="min",help="select how new colors are selected according to their distance (defaults to min)")  # NOT DONE YET
-    parser.add_argument("--startpoints", type=int,help="number of starting points (defaults to 1). Doesn't work if start position is set to center", default=1)  # OK
+    parser.add_argument("-b", "--bits", type=int, help="image depth bits (defaults to 15)", default=15)
+    parser.add_argument("-n", "--number", type=int, help="number of images to generate (defaults to 1)", default=1)
+    parser.add_argument("-p", "--startposition", action="store", choices=["center", "corner", "random"], default="center", help="location of the first pixel (defaults to center)")
+    parser.add_argument("-c", "--startcolor", action="store", choices=["white", "black", "random"], default="random", help="color of the first pixel (defaults to random)")
+    parser.add_argument("-o", "--output", type=str, default="output", help="output folder (defaults to output) make sure that the path exists")
+    parser.add_argument("-l", "--log", action="store", choices=["file", "console"], default="file", help="log destination (defaults to file)")
+    parser.add_argument("--progresspics", type=int, help="number of progress pics to be saved (defaults to 0)", default=0)
+    parser.add_argument("--sortcolors", action="store", choices=["hue", "saturation", "brightness", "default", "reverse", "random"], default="random", help="sort colors before placing them (defaults to random)")
+    parser.add_argument("--distselection", action="store", choices=["min", "average"], default="min", help="select how new colors are selected according to their distance (defaults to min)")
+    parser.add_argument("--startpoints", type=int, help="number of starting points (defaults to 1). Doesn't work if start position is set to center", default=1)
 
     args = parser.parse_args()
 
@@ -483,16 +472,19 @@ def main():
         start_points = args.startpoints
         start_color = args.startcolor
         sort_colors = args.sortcolors
+        dist_selection = args.distselection
         progress_pics = args.progresspics
         logging.info(f"start position: {start_position}, "
+                     f"start points: {start_points}, "
                      f"start color: {start_color}, "
+                     f"sort color: {sort_colors}, "
                      f"saving progress pics: {progress_pics}. "
                      "Starting pixels placement.")
 
         colored_grid, seconds = place_pixels(grid, colors, start_position,
                                              start_points, start_color,
-                                             sort_colors, progress_pics, path,
-                                             filename)
+                                             sort_colors, dist_selection,
+                                             progress_pics, path, filename)
         logging.info(f"pixel placing completed! It took {seconds} seconds.")
 
         image = generate_image(colored_grid)
