@@ -315,7 +315,9 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
         else:
             # sort pixels by color difference
             sorted_pixels = sorted(available_pixels,
-                                   key=lambda p: calculate_diff(grid, p, c, dist_selection))
+                                   key=lambda p:
+                                   calculate_diff(grid, p, c, dist_selection))
+
             # pick the closest one
             selected_pixel = sorted_pixels[0]
 
@@ -348,6 +350,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
             last_saved = round(percent * 4) / 4  # round to quarters
             # .5 -> .50, (add zeroes at the and)
             last_saved_str = format(last_saved, '.2f')
+            # grid deep copy
             progress_grid = [g[:] for g in grid]
             image = generate_image(progress_grid)
             logging.info(f"progress image at {last_saved_str}"
@@ -401,7 +404,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
 
 
 # generates the image by dumping the grid into a png
-def generate_image(grid, default_color=(0, 0, 0)):
+def generate_image(grid, default_color=Color(0, 0, 0)):
     width = len(grid)
     height = len(grid[0])
 
@@ -410,8 +413,10 @@ def generate_image(grid, default_color=(0, 0, 0)):
     for x in range(width):
         for y in range(height):
             # fill with default color if empty
-            if not grid[x][y].RGB:
-                grid[x][y] = Color(default_color)
+            if not grid[x][y]:
+                grid[x][y] = Color(default_color.r,
+                                   default_color.g,
+                                   default_color.b)
 
             image.putpixel((x, y), grid[x][y].RGB)
     return image
@@ -434,16 +439,42 @@ def main():
                                      "the possible colors in the"
                                      " RGB colorspace")
 
-    parser.add_argument("-b", "--bits", type=int, help="image depth bits (defaults to 15)", default=15)
-    parser.add_argument("-n", "--number", type=int, help="number of images to generate (defaults to 1)", default=1)
-    parser.add_argument("-p", "--startposition", action="store", choices=["center", "corner", "random"], default="center", help="location of the first pixel (defaults to center)")
-    parser.add_argument("-c", "--startcolor", action="store", choices=["white", "black", "random"], default="random", help="color of the first pixel (defaults to random)")
-    parser.add_argument("-o", "--output", type=str, default="output", help="output folder (defaults to output) make sure that the path exists")
-    parser.add_argument("-l", "--log", action="store", choices=["file", "console"], default="file", help="log destination (defaults to file)")
-    parser.add_argument("--progresspics", type=int, help="number of progress pics to be saved (defaults to 0)", default=0)
-    parser.add_argument("--sortcolors", action="store", choices=["hue", "saturation", "brightness", "default", "reverse", "random"], default="random", help="sort colors before placing them (defaults to random)")
-    parser.add_argument("--distselection", action="store", choices=["min", "average"], default="min", help="select how new colors are selected according to their distance (defaults to min)")
-    parser.add_argument("--startpoints", type=int, help="number of starting points (defaults to 1). Doesn't work if start position is set to center", default=1)
+    parser.add_argument("-b", "--bits", type=int,
+                        help="image depth bits (defaults to 15)", default=15)
+    parser.add_argument("-n", "--number", type=int,
+                        help="number of images to generate (defaults to 1)",
+                        default=1)
+    parser.add_argument("-p", "--startposition", action="store",
+                        choices=["center", "corner", "random"],
+                        default="center",
+                        help="location of the first pixel "
+                        "(defaults to center)")
+    parser.add_argument("-c", "--startcolor", action="store",
+                        choices=["white", "black", "random"], default="random",
+                        help="color of the first pixel (defaults to random)")
+    parser.add_argument("-o", "--output", type=str, default="output",
+                        help="output folder (defaults to output) "
+                        "make sure that the path exists")
+    parser.add_argument("-l", "--log", action="store",
+                        choices=["file", "console"], default="file",
+                        help="log destination (defaults to file)")
+    parser.add_argument("--progresspics", type=int,
+                        help="number of progress pics to be saved "
+                        "(defaults to 0)", default=0)
+    parser.add_argument("--sortcolors", action="store",
+                        choices=["hue", "saturation", "brightness",
+                                 "default", "reverse", "random"],
+                        default="random",
+                        help="sort colors before placing them"
+                        "(defaults to random)")
+    parser.add_argument("--distselection", action="store",
+                        choices=["min", "average"], default="min",
+                        help="select how new colors are selected according"
+                        "to their distance (defaults to min)")
+    parser.add_argument("--startpoints", type=int,
+                        help="number of starting points (defaults to 1). "
+                        "Doesn't work if start position is set to center",
+                        default=1)
 
     args = parser.parse_args()
 
