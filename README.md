@@ -36,3 +36,5 @@ All arguments are optionals
 I like PEP8 but 79 characters is definitely not enough
 
 # License
+
+This project is distributed under Attribution 4.0 International (CC BY 4.0) license.
