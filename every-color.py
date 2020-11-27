@@ -13,7 +13,7 @@ class Pixel:
         self.__x = x
         self.__y = y
 
-    # overrides == for list
+    # overrides == for list sorting and placing
     def __eq__(self, other):
         return self.__x == other.x and self.__y == other.y
 
@@ -47,10 +47,50 @@ class Color:
         self.__r = r
         self.__g = g
         self.__b = b
+        self.__h, self.__s, self.__v = self.__calculateHSB()
+
+    def __calculateHSB(self):
+        # converts RGB values to HSV (hue, saturation, value)
+        # value is the same as brightness (but b was alerady taken...)
+
+        # r, g, b normalized in range [0, 1]
+        r, g, b = self.__r / 255.0, self.__g / 255.0, self.__b / 255.0
+
+        cmax = max(r, g, b)    # maximum of r, g, b
+        cmin = min(r, g, b)    # minimum of r, g, b
+        diff = cmax - cmin     # diff of cmax and cmin.
+
+        # cmax == cmin => hue = 0
+        if cmax == cmin:
+            h = 0.0
+        # cmax == r, we need to calculate h
+        elif cmax == r:
+            h = (60 * ((g - b) / diff) + 360) % 360
+
+        # cmax == g, we need to calculate h
+        elif cmax == g:
+            h = (60 * ((b - r) / diff) + 120) % 360
+        #  cmax == b, we need to calculate h
+        elif cmax == b:
+            h = (60 * ((r - g) / diff) + 240) % 360
+
+        # cmax == 0 -> s = 0
+        if cmax == 0:
+            s = 0.0
+        else:
+            s = (diff / cmax) * 100
+
+        # v calculation
+        v = cmax * 100
+        return (h, s, v)
 
     @property
     def RGB(self):
         return (self.__r, self.__g, self.__b)
+
+    @property
+    def HSB(self):
+        return (self.__h, self.__s, self.__v)
 
     @property
     def r(self):
@@ -63,6 +103,18 @@ class Color:
     @property
     def b(self):
         return self.__b
+
+    @property
+    def h(self):
+        return self.__h
+
+    @property
+    def s(self):
+        return self.__s
+
+    @property
+    def v(self):
+        return self.__v
 
 
 # generates all the colors needed in the script
@@ -168,39 +220,66 @@ def calculate_diff(grid, pixel, color):
 
 
 # place pixels in grid, effectively creating the image
-def place_pixels(grid, colors, start_position, start_color, progress_pics,
-                 path, filename):
+def place_pixels(grid, colors, start_position, start_points, start_color,
+                 sort_colors, progress_pics, path, filename):
     # started time
     started = datetime.now()
 
     # progess tracking
     percent = 0
+    percent_interval = 1
     last_percent = 0
 
     # progress pictures tracking
     last_saved = 0
+    if progress_pics > 0:
+        # percent intervals at which a progress has to be saved
+        save_interval = 100 / progress_pics
+    else:
+        save_interval = None
 
     # all available pixels (free with at least one neighbor)
     available_pixels = []
     # best pixel for the current color
-    best_pixel = Pixel()
+    selected_pixel = Pixel()
 
-    # WELL WELL WELL
-
+    # start color picking
     if start_color == "white":
-        # colors list is built from least to most colored, so we need to sort
-        # it backwards (reverse it)
-        colors.reverse()
+        # colors list is built from least to most colored, so we need to put
+        # the last item in front
+        colors.insert(0, colors.pop(-1))
     elif start_color == "black":
         # first color is already the darkest, so no need to do anything
         pass
     elif start_color == "random":
-        # randomize the whole list
+        # pick a random element index
+        color_index = random.randrange(len(colors))
+        # put the random selected color in front
+        colors.insert(0, colors.pop(color_index))
+
+    # sort colors
+    if sort_colors == "hue":
+        # sort by hue
+        colors = sorted(colors, key=lambda c: c.h)
+    elif sort_colors == "saturation":
+        # sort by saturation
+        colors = sorted(colors, key=lambda c: c.s)
+    elif sort_colors == "brightness":
+        # sort by value (brightness)
+        colors = sorted(colors, key=lambda c: c.v)
+    elif sort_colors == "default":
+        # do nothing
+        pass
+    elif sort_colors == "reverse":
+        # reverse
+        colors.reverse()
+    elif sort_colors == "random":
+        # suffle array
         random.shuffle(colors)
 
     # iterate over colors
-    for x in range(len(colors)):
-        c = colors[x]
+    for i in range(len(colors)):
+        c = colors[i]
 
         if len(available_pixels) == 0:
             # since we have no available pixels, we gotta pick a first one
@@ -210,40 +289,54 @@ def place_pixels(grid, colors, start_position, start_color, progress_pics,
             width = len(grid)
             height = len(grid[0])
 
-            # place first pixel
-            if start_position == "center":
-                best_pixel = Pixel(int(width/2), int(height/2))
-            elif start_position == "corner":
-                best_pixel = Pixel(random.randrange(width),
-                                   random.randrange(height))
-            elif start_position == "random":
-                best_pixel = Pixel(int(width/2), int(height/2))
-            # we append it to the list of available pixels
-            available_pixels.append(best_pixel)
+            for j in range(start_points):
+                # place first pixel(s)
+                if start_position == "center" and j == 0:
+                    selected_pixel = Pixel(int(width/2), int(height/2))
+                elif start_position == "corner" and j < 5:
+                    # only the first 4 corners
+                    # bit masking to get corners
+                    x = (j >> 1) & 1
+                    y = (j >> 0) & 1
+                    selected_pixel = Pixel(x * width, y * height)
+
+                elif start_position == "random":
+                    selected_pixel = Pixel(random.randrange(width),
+                                           random.randrange(height))
+
+                # we append it to the list of available pixels
+                available_pixels.append(selected_pixel)
         else:
             # look throught every available pixel and find the one with the
             # least difference with the current color
-            #  (that's why we call it "best pixel")
-            best_pixel = sorted(available_pixels,
-                                key=lambda p: calculate_diff(grid, p, c))[0]
+            selected_pixel = sorted(available_pixels,
+                                    key=lambda p: calculate_diff(grid, p, c))[0]
+
 
         # put the color on the best pixel on the grid
-        grid[best_pixel.x][best_pixel.y] = c
+        grid[selected_pixel.x][selected_pixel.y] = c
 
         # find all new available pixels
-        new_available_pixels = find_free_neighbors(grid, best_pixel)
+        new_available_pixels = find_free_neighbors(grid, selected_pixel)
+        # has any new pixel been added?
+        new_pixels = False
         # loop throught them
         for n in new_available_pixels:
             # if the new found is not already in the list, add it
             if n not in available_pixels:
                 available_pixels.append(n)
+                new_pixels = True
+        # if any new pixel has been added:
+        if new_pixels:
+            # shuffle the array
+            random.shuffle(available_pixels)
         # remove the pixel that we just put
-        available_pixels.remove(best_pixel)
+        available_pixels.remove(selected_pixel)
 
         # update percent
-        percent = x / len(colors) * 100
+        percent = i / len(colors) * 100
         # is it time to save a progress pic yet?
-        if progress_pics and percent - last_saved >= 0.25:
+        if progress_pics > 0 and percent - last_saved >= save_interval:
             # yes it is
             last_saved = last_percent
             last_saved = round(percent * 4) / 4  # round to quarters
@@ -259,7 +352,7 @@ def place_pixels(grid, colors, start_position, start_color, progress_pics,
             logging.info(f"progress image saved: {full_path}")
 
         # update logging
-        if percent - last_percent >= 1:
+        if percent - last_percent >= percent_interval:
             last_percent = percent
             # calculate elapsed time
             elapsed_seconds = int((datetime.now() - started).total_seconds())
@@ -301,7 +394,7 @@ def generate_image(grid, default_color=(0, 0, 0)):
 
 
 # save image to file
-def save_image(image, path="", filename="everycolor"):
+def save_image(image, path, filename):
     if path:
         Path(path).mkdir(parents=True, exist_ok=True)
         full_path = f"{path}/{filename}.png"
@@ -336,14 +429,14 @@ def main():
     parser.add_argument("-l", "--log", action="store",
                         choices=["file", "console"], default="file",
                         help="log destination (defaults to file)")  # OK
-    parser.add_argument("--progresspics", action="store_true",
-                        help="saves a picture every 0.25%% of completion")  # OK
+    parser.add_argument("--progresspics", type=int,
+                        help="number of progress pics to be saved (defaults to 0)", default=0)  # OK
     parser.add_argument("--sortcolors", action="store",
-                        choices=["no", "random", "hue"], default="no",
-                        help="sort colors before placing them (defaults to no)") # NOT DONE YET
-    parser.add_argument("--distselection", action="store",
-                        choices=["min", "average"], default="min",
-                        help="select how new colors are selected according to their distance (defaults to no)") # NOT DONE YET
+                        choices=["hue", "saturation", "brightness", "default", "reverse", "random"], default="random",
+                        help="sort colors before placing them (defaults to random)") # OK
+    parser.add_argument("--distselection", action="store",choices=["min", "average"], default="min",help="select how new colors are selected according to their distance (defaults to min)")  # NOT DONE YET
+    parser.add_argument("--startpoints", type=int,help="number of starting points (defaults to 1). Doesn't work if start position is set to center", default=1)  # OK
+
     args = parser.parse_args()
 
     # logging setup
@@ -387,15 +480,18 @@ def main():
         logging.info("empty image grid generated")
 
         start_position = args.startposition
+        start_points = args.startpoints
         start_color = args.startcolor
+        sort_colors = args.sortcolors
         progress_pics = args.progresspics
         logging.info(f"start position: {start_position}, "
                      f"start color: {start_color}, "
                      f"saving progress pics: {progress_pics}. "
-                     "Starting pixel placement")
+                     "Starting pixels placement.")
 
         colored_grid, seconds = place_pixels(grid, colors, start_position,
-                                             start_color, progress_pics, path,
+                                             start_points, start_color,
+                                             sort_colors, progress_pics, path,
                                              filename)
         logging.info(f"pixel placing completed! It took {seconds} seconds.")
 
@@ -406,6 +502,7 @@ def main():
         logging.info(f"image saved: {full_image_path}")
 
     logging.info("script ended")
+
 
 if __name__ == "__main__":
     main()
