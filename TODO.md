@@ -1,4 +1,4 @@
-1. Add README **WIP**
+1. ~Add README~ **DONE**
 2. ~Add License~ **DONE**
 3. Generate some images and include them
 4. Generate a video of the progress
