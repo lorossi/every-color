@@ -1,4 +1,6 @@
 *.png
+*.gif
+*.mp4
 *test.py
 *.log
 /tests
