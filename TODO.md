@@ -5,3 +5,6 @@
 5. ~Better picks for next pixel (sometimes it makes too much of a "noodle on canvas" effect)~ **DONE**
 6. ~Add some remaining time calculator~ **DONE**
 7. ~Pick more than one pixel at beginning~ **DONE**
+8. Images to generate:
+`python3 every-color.py -l console -p corner --startpoints 4 -b 18 --sortcolors hue`
+`python3 every-color.py -b 18 --sortcolors hue -l console`
