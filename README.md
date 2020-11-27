@@ -2,7 +2,7 @@
 
 I wanted to generate an image containing every color, so here we go.
 
-This *not-so-hdany* tool is ready to make any image you want! Just simple these simple (I swear, it's simple) instructions.
+This *not-so-handy* tool is ready to make any image you want! Just simple these simple (I swear, it's simple) instructions.
 
 ## How it works
 
@@ -59,6 +59,10 @@ All arguments are optionals
 # Additional infos
 
 The script takes quite a while to generate big pictures (up to about half a day for 24 bits pictures). There isn't much room for optimizations and according to my tests, parallelization won't increase much the speed. The most computationally expensive process is searching for a better pixel.
+
+FFmpeg commands used:
+- To create MP4 video: `fmpeg -i frames/%03d.png -vf fps=25,scale=512:-1 out.mp4 -y`
+- To create GIFS:`ffmpeg -i frames/%03d.png -vf fps=20,scale=512:-1 out.gif -y`
 
 I like PEP8 but 79 characters is definitely not enough.
 
