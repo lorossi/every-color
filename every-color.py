@@ -307,8 +307,9 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
                 selected_pixel = Pixel(random.randrange(width),
                                        random.randrange(height))
 
+            # put the color on the selected pixel in the grid
             grid[selected_pixel.x][selected_pixel.y] = c
-            print(selected_pixel.pos)
+
             # we append it to the list of available pixels
             available_pixels.append(selected_pixel)
         else:
@@ -318,8 +319,8 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
             # pick the closest one
             selected_pixel = sorted_pixels[0]
 
-        # put the color on the best pixel on the grid
-        grid[selected_pixel.x][selected_pixel.y] = c
+            # put the color on the best pixel on the grid
+            grid[selected_pixel.x][selected_pixel.y] = c
 
         # find all new available pixels
         new_available_pixels = find_free_neighbors(grid, selected_pixel)
@@ -363,6 +364,14 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
             elapsed_seconds = int((datetime.now() - started).total_seconds())
             elapsed_minutes = int(elapsed_seconds / 60)
             elapsed_hours = int(elapsed_minutes / 60)
+
+            # calculate total time
+            total_seconds = 100 * elapsed_seconds / percent
+            # calculate remaining time
+            remaining_seconds = int(total_seconds - elapsed_seconds)
+            remaining_minutes = int(remaining_seconds / 60)
+            remaining_hours = int(remaining_minutes / 60)
+
             # string that will be logged
             log_string = f"Progress: {int(percent)}%, elapsed: "
 
@@ -373,6 +382,16 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
                 log_string += f"{elapsed_minutes} minute(s)"
             else:
                 log_string += f"{elapsed_seconds} second(s)"
+
+            log_string += ", remaining: "
+            # remaining time in a correct fashion
+            if remaining_hours > 0:
+                log_string += f"{remaining_hours} hour(s)"
+            elif remaining_minutes > 0:
+                log_string += f"{remaining_minutes} minute(s)"
+            else:
+                log_string += f"{remaining_seconds} second(s)"
+
             # it's time to log!
             logging.info(log_string)
 
