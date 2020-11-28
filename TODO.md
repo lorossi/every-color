@@ -6,7 +6,7 @@
 6. ~Add some remaining time calculator~ **DONE**
 7. ~Pick more than one pixel at beginning~ **DONE**
 8. Images to generate:
-`python3 every-color.py -l console -p corner --startpoints 4 -b 18 --sortcolors hue`
-`python3 every-color.py -b 18 --sortcolors hue -l console`
-`python3 every-color.py -b 24 -l console -o 4k`
-`python3 every-color-py -l console -progresspics 200 --distselection average -o video2`
+  - ~`python3 every-color.py -l console -p corner --startpoints 4 -b 18 --sortcolors hue`~
+  - ~`python3 every-color.py -b 18 --sortcolors hue -l console`~
+  - `python3 every-color.py -l console -progresspics 200 --distselection average -o video2`
+  - `python3 every-color.py -l console --distselection average -p corner --startpoints 4`
