@@ -375,7 +375,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
             remaining_hours = int(remaining_minutes / 60)
 
             # string that will be logged
-            log_string = f"Progress: {int(percent)}%, elapsed: "
+            log_string = f"progress: {int(percent)}%, elapsed: "
 
             # stop showing plural a plural S when it's singular!
             suffix = ""
@@ -385,11 +385,11 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
                     suffix = "s"
                 log_string += f"{elapsed_hours} hour{suffix}"
             elif elapsed_minutes > 0:
-                if elapsed_minutes > 0:
+                if elapsed_minutes > 1:
                     suffix = "s"
                 log_string += f"{elapsed_minutes} minute{suffix}"
             else:
-                if elapsed_seconds > 0:
+                if elapsed_seconds > 1:
                     suffix = "s"
                 log_string += f"{elapsed_seconds} second{suffix}"
 
@@ -412,6 +412,19 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
 
             # it's time to log!
             logging.info(log_string)
+
+            # check if it's time to pause
+            script_paused = False
+            while Path('PAUSE').is_file():
+                # notify only the first time
+                if not script_paused:
+                    logging.info("script paused")
+                    script_paused = True
+
+            # if file does not exist but the script was script_paused, it's time
+            # to start again
+            if script_paused:
+                logging.info("script resumed")
 
     # elapsed time in seconds
     seconds = int((datetime.now() - started).total_seconds())
@@ -556,7 +569,7 @@ def main():
                      f"dist selection: {dist_selection}, "
                      f"saving progress pics: {progress_pics}. "
                      "Starting pixels placement.")
-        logging.info("Keep in mind that the remaining time will not be "
+        logging.info("keep in mind that the remaining time will not be "
                      "accurate at least until about half of the progress has "
                      "gone by. Don't panic, the script is most likely not "
                      "stuck but very computationally heavy and as such "

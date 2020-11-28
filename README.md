@@ -51,6 +51,10 @@ All arguments are optionals
 - Generate 1 image sorting all colors by hue: `python3 every-color.py --SORTCOLORS hue`
 - Generate 10 images with 5 random starting points and average distance selections: `python3 every-color.py -n 5 --STARTPOINTS 5 --DISTSELECTION average`
 
+## Pause script
+
+If, for any reason, you need to pause the script, create a file called `PAUSE` in the working folder. As long as the file is there, the script will be paused.
+
 ## Outputs
 
 **TODO**
