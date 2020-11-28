@@ -4,3 +4,4 @@
 *test.py
 *.log
 /tests
+PAUSE*
