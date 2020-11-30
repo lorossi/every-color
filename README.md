@@ -5,7 +5,7 @@ I wanted to generate an image containing every color, so here we go.
 This *not-so-handy* tool is ready to make any image you want! Just simple these simple (I swear, it's simple) instructions.
 
 ## Outputs
-You can fine more images inside the *output* folder.
+You can find a few more images inside the *output* folder.
 
 # Minimum selection, random color sorting
 ![centered start](https://github.com/lorossi/every-color/blob/master/output/18bits-center.png?raw=true)
