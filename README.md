@@ -61,46 +61,68 @@ If, for any reason, you need to pause the script, create a file called `PAUSE` i
 
 # Minimum selection, random color sorting
 ![centered start](https://github.com/lorossi/every-color/blob/master/output/18bits-center.png?raw=true)
-Started with a random pixel in center
+
+*Started with a random pixel in center*
+
 ![centered start](https://github.com/lorossi/every-color/blob/master/output/18bits-center-2.png?raw=true)
-Started with a random pixel in center
+
+*Started with a random pixel in center*
+
 ![2 points random](https://github.com/lorossi/every-color/blob/master/output/18bits-2points-random.png?raw=true)
-Started with 2 pixels in random positions
+
+*Started with 2 pixels in random positions*
+
 ![4 points random](https://github.com/lorossi/every-color/blob/master/output/18bits-4points-random.png?raw=true)
-Started with 4 pixels in random positions
+
+*Started with 4 pixels in random positions*
+
 ![5 points random](https://github.com/lorossi/every-color/blob/master/output/18bits-5points-random.png?raw=true)
-Started with 5 pixels in random positions
+
+*Started with 5 pixels in random positions*
+
 ![4 points corners](https://github.com/lorossi/every-color/blob/master/output/18bits-4points-corners.png?raw=true)
-Started with 1 pixel in each corner
+
+*Started with 1 pixel in each corner*
 
 # Minimum selection, hue color sorting
 ![centered start](https://github.com/lorossi/every-color/blob/master/output/18bits-4points-corners-hue.png?raw=true)
-Started with a random pixel in center
+
+*Started with a random pixel in center*
+
 ![corners start](https://github.com/lorossi/every-color/blob/master/output/18bits-center-hue.png?raw=true)
-Started with 1 pixel in each corner
+
+*Started with 1 pixel in each corner*
 
 # Average selection, random color sorting
 ![centered start](https://github.com/lorossi/every-color/blob/master/output/frames_2/200.png?raw=true)
-Started with a random pixel in center
+
+*Started with a random pixel in center*
+
 ![corners start](https://github.com/lorossi/every-color/blob/master/output/18bits-corners-average.png?raw=true)
-Started with 1 pixel in each corner
+
+*Started with 1 pixel in each corner*
 
 # Composition
 ![composition](https://github.com/lorossi/every-color/blob/master/output/64_small_12bits.png?raw=true)
-Composition of 64 small images
+
+*Composition of 64 small images*
 
 # Progess Gifs
 ![minimum gif](https://github.com/lorossi/every-color/blob/master/output/video_1.gif?raw=true)
-Minimum selection
+
+*Minimum selection*
 
 ![minimum gif final](https://github.com/lorossi/every-color/blob/master/output/frames_1/200.png?raw=true)
-Final image
+
+*Final image*
 
 ![average gif](https://github.com/lorossi/every-color/blob/master/output/video_2.gif?raw=true)
-Average selection
+
+*Average selection*
 
 ![average gif final](https://github.com/lorossi/every-color/blob/master/output/frames_2/200.png?raw=true)
-Final image
+
+*Final image*
 
 # Additional infos
 
