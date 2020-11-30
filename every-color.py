@@ -421,8 +421,8 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
                     logging.info("script paused")
                     script_paused = True
 
-            # if file does not exist but the script was script_paused, it's time
-            # to start again
+            # if file does not exist but the script was script_paused,
+            # it's time to start again
             if script_paused:
                 logging.info("script resumed")
 
@@ -540,8 +540,9 @@ def main():
         logging.info(f"started generating image {x+1}/{images_to_generate}")
         # random seeding
         random.seed(datetime.now())
+        # output filename generation
         now = datetime.now().strftime("%Y%m%d-%H%M%S")
-        filename = f"{now}-{__file__.replace('.py', '.png')}"
+        filename = f"{now}-{__file__.replace('.py', '')}"
         path = args.output
         logging.info("basic setup completed, generating image with "
                      f"{bits} bits")
