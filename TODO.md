@@ -1,6 +1,6 @@
 1. ~Add README~ **DONE**
 2. ~Add License~ **DONE**
-3. ~Generate some images and include them] **DONE**
+3. ~Generate some images and include them~ **DONE**
 4. ~Generate a video of the progress~ **DONE**
 5. ~Better picks for next pixel (sometimes it makes too much of a "noodle on canvas" effect)~ **DONE**
 6. ~Add some remaining time calculator~ **DONE**
