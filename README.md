@@ -9,7 +9,7 @@ This *not-so-handy* tool is ready to make any image you want! Just simple these 
 This is how the script operates:
 
 1. It starts by generating and empty grid as big as the final image and a list containing every color with the wanted bit depth
-2. It put a starting point (or more, according to the parameters) with a random (or not, again, according to the parameters) in a set location in the image
+2. It puts a starting point (or more, according to the parameters) with a random (or not, again, according to the parameters) in a set location in the image
 3. It calculates all candidate pixels (empty pixels neighboring a colored one)
 4. It iterates over all pixels until we find the one with the least minimum (or average) neighborhood color difference (the selected pixel)
 5. It fills the selected pixel
