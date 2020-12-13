@@ -105,7 +105,7 @@ All the following steps require you to have Python installed. If you haven't, do
 | `-p --STARTPOSITION` | location of the first pixel  | `center` | `{center, corner, random}` |
 | `-c --STARTCOLOR` | color of the first pixel | `random` | `{white, black, random}` |
 | `-o --OUTPUT` | output folder | `output` | `str` |
-| `-l --LOG` | log destination | `file` | `{file, console}` | ✓ |
+| `-l --LOG` | log destination | `file` | `{file, console}` |
 | `--PROGRESSPICS` | number of progress pics to be saved | `0` | `int` |
 | `--SORTCOLORS` | sort colors before placing them | `random` | `{"hue", "saturation", "brightness", "default", "reverse", "random"}` |
 | `--DISTSELECTION` | select how new colors are selected according to their distance | `min` | `{min, average}` |
