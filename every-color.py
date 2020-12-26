@@ -138,7 +138,9 @@ def generate_colors(bits):
 
 
 # calculate image size in pixels by number of colors
-def calculate_size(color_number):
+def calculate_size(bits):
+    # total number of colors
+    color_number = int(2 ** bits)
     if sqrt(color_number).is_integer():
         # if the image is a square
         width = int(sqrt(color_number))
@@ -228,12 +230,13 @@ def calculate_diff(grid, pixel, color, dist_selection):
 def place_pixels(grid, colors, start_position, start_points, start_color,
                  sort_colors, dist_selection, progress_pics, path, filename):
     # started time
-    started = datetime.now()
+    started = time.time()
 
     # progess tracking
     percent = 0
     percent_interval = 1
     last_percent = 0
+    time_lost = 0
 
     # progress pictures tracking
     last_saved = 0
@@ -364,7 +367,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
         if percent - last_percent >= percent_interval:
             last_percent = percent
             # calculate elapsed time
-            elapsed_seconds = int((datetime.now() - started).total_seconds())
+            elapsed_seconds = int((time.time() - started)) - time_lost
             elapsed_minutes = int(elapsed_seconds / 60)
             elapsed_hours = int(elapsed_minutes / 60)
 
@@ -416,20 +419,25 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
 
             # check if it's time to pause
             script_paused = False
+            pause_started = time.time()
             while Path('PAUSE').is_file():
                 # notify only the first time
                 if not script_paused:
                     logging.info("script paused")
                     script_paused = True
+                # lower the load on the cpu
+                time.sleep(1)
 
             # if file does not exist but the script was script_paused,
             # it's time to start again
             if script_paused:
-                logging.info("script resumed")
+                time_lost += int(time.time() - pause_started)
+                logging.info(f"script resumed. Total time lost: {time_lost} "
+                             "seconds.")
 
     # elapsed time in seconds
-    seconds = int((datetime.now() - started).total_seconds())
-    return grid, seconds
+    seconds = int((time.time() - started))
+    return grid, seconds, time_lost
 
 
 # generates the image by dumping the grid into a png
@@ -524,7 +532,7 @@ def main():
     # color depth
     bits = args.bits
     if bits % 3 != 0:
-        logging.error("The bit number must be dibisible by 3")
+        logging.error("the bit number must be dibisible by 3")
         return
 
     # random.seed
@@ -533,8 +541,36 @@ def main():
         # seed not provided, we use current time (converted to string)
         seed = str(datetime.now().timestamp())
 
+    # get output folder
+    path = args.output
+
     random.seed(seed)
     logging.info(f"seed used for random functions: {seed}")
+    logging.info("basic setup completed, generating image with "
+                 f"{bits} bits")
+
+    width, height = calculate_size(bits)
+    start_position = args.startposition
+    start_points = args.startpoints
+    start_color = args.startcolor
+    sort_colors = args.sortcolors
+    dist_selection = args.distselection
+    progress_pics = args.progresspics
+    logging.info(f"start position: {start_position}, "
+                 f"start points: {start_points}, "
+                 f"start color: {start_color}, "
+                 f"sort color: {sort_colors}, "
+                 f"dist selection: {dist_selection}, "
+                 f"saving progress pics: {progress_pics}, "
+                 f"destination image size: {width}x{height} pixels.")
+
+    logging.info("starting pixels placement.")
+
+    logging.info("keep in mind that the remaining time will not be "
+                 "accurate at least until about half of the progress has "
+                 "gone by. Don't panic, the script is most likely not "
+                 "stuck but very computationally heavy and as such "
+                 "quite slow. Let it run!")
 
     images_to_generate = args.number
     for x in range(images_to_generate):
@@ -544,47 +580,28 @@ def main():
         # output filename generation
         now = datetime.now().strftime("%Y%m%d-%H%M%S")
         filename = f"every-color-{now}"
-        path = args.output
-        logging.info("basic setup completed, generating image with "
-                     f"{bits} bits")
 
         colors = generate_colors(bits)
         logging.info("colors generated")
 
-        width, height = calculate_size(len(colors))
-        logging.info(f"size calculated, generating a {width} pixels "
-                     f"by {height} pixels image")
-
         grid = generate_grid(width, height)
         logging.info("empty image grid generated")
 
-        start_position = args.startposition
-        start_points = args.startpoints
-        start_color = args.startcolor
-        sort_colors = args.sortcolors
-        dist_selection = args.distselection
-        progress_pics = args.progresspics
-        logging.info(f"start position: {start_position}, "
-                     f"start points: {start_points}, "
-                     f"start color: {start_color}, "
-                     f"sort color: {sort_colors}, "
-                     f"dist selection: {dist_selection}, "
-                     f"saving progress pics: {progress_pics}. "
-                     "Starting pixels placement.")
-        logging.info("keep in mind that the remaining time will not be "
-                     "accurate at least until about half of the progress has "
-                     "gone by. Don't panic, the script is most likely not "
-                     "stuck but very computationally heavy and as such "
-                     "quite slow. Let it run!")
+        colored_grid, seconds, lost = place_pixels(grid, colors,
+                                                   start_position,
+                                                   start_points, start_color,
+                                                   sort_colors, dist_selection,
+                                                   progress_pics, path,
+                                                   filename)
 
-        colored_grid, seconds = place_pixels(grid, colors, start_position,
-                                             start_points, start_color,
-                                             sort_colors, dist_selection,
-                                             progress_pics, path, filename)
-        logging.info(f"pixel placing completed! It took {seconds} seconds.")
+        logging.info(f"pixel placing completed! It took {seconds} seconds. "
+                     f"Total effective time: {seconds - lost} seconds. "
+                     f"Total paused time: {lost} seconds.")
+        logging.info(f"average speed: {round((width * height) / seconds, 2)} "
+                     "pixels per second")
 
         image = generate_image(colored_grid)
-        logging.info("image generated")
+        logging.info(f"image {x+1}/{images_to_generate} generated")
 
         full_image_path = save_image(image, path=path, filename=filename)
         logging.info(f"image saved: {full_image_path}")
