@@ -1,10 +1,10 @@
+import time
 import random
 import logging
 import argparse
 from PIL import Image
 from math import sqrt
 from pathlib import Path
-from datetime import datetime
 
 
 # container for the current pixel. Easier than just using x and y variables
@@ -539,7 +539,7 @@ def main():
     for x in range(images_to_generate):
         logging.info(f"started generating image {x+1}/{images_to_generate}")
         # random seeding
-        random.seed(datetime.now())
+        random.seed(time.time())
         # output filename generation
         now = datetime.now().strftime("%Y%m%d-%H%M%S")
         filename = f"{now}-{__file__.replace('.py', '')}"
