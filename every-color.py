@@ -578,7 +578,7 @@ def main():
     for x in range(images_to_generate):
         logging.info(f"started generating image {x+1}/{images_to_generate}")
         # random seeding
-        random.seed(time.time())
+        random.seed(seed)
         # output filename generation
         now = datetime.now().strftime("%Y%m%d-%H%M%S")
         filename = f"every-color-{now}"
