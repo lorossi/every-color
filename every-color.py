@@ -299,6 +299,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
             if start_position == "center" and i == 0:
                 # if center, we use only the first one
                 selected_pixel = Pixel(int(width/2), int(height/2))
+
             elif start_position == "corner" and i < 5:
                 # only the first 4 corners
                 # bit masking to get corners
@@ -432,8 +433,9 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
             # it's time to start again
             if script_paused:
                 time_lost += int(time.time() - pause_started)
-                logging.info(f"script resumed. Total time lost: {time_lost} "
-                             "seconds.")
+                current_lost = int(time.time() - pause_started)
+                logging.info(f"script resumed. The script was paused for "
+                             f"{current_lost} seconds.")
 
     # elapsed time in seconds
     seconds = int((time.time() - started))
