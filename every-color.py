@@ -7,6 +7,7 @@ from math import sqrt
 from pathlib import Path
 from datetime import datetime
 
+
 # container for the current pixel. Easier than just using x and y variables
 class Pixel:
     def __init__(self, x=None, y=None):
