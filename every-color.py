@@ -5,7 +5,7 @@ import argparse
 from PIL import Image
 from math import sqrt
 from pathlib import Path
-
+from datetime import datetime
 
 # container for the current pixel. Easier than just using x and y variables
 class Pixel:
@@ -493,7 +493,7 @@ def main():
                         choices=["hue", "saturation", "brightness",
                                  "default", "reverse", "random"],
                         default="random",
-                        help="sort colors before placing them"
+                        help="sort colors before placing them "
                         "(defaults to random)")
     parser.add_argument("--distselection", action="store",
                         choices=["min", "average"], default="min",
@@ -509,7 +509,7 @@ def main():
 
     # logging setup
     if args.log == "file":
-        logfile = __file__.replace(".py", ".log")
+        logfile = "every-color.log"
         logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                             level=logging.INFO, filename=logfile,
                             filemode="w+")
@@ -542,7 +542,7 @@ def main():
         random.seed(time.time())
         # output filename generation
         now = datetime.now().strftime("%Y%m%d-%H%M%S")
-        filename = f"{now}-{__file__.replace('.py', '')}"
+        filename = f"every-color-{now}"
         path = args.output
         logging.info("basic setup completed, generating image with "
                      f"{bits} bits")
@@ -551,8 +551,8 @@ def main():
         logging.info("colors generated")
 
         width, height = calculate_size(len(colors))
-        logging.info(f"size calculated, generating a {width} "
-                     f"by {height} image")
+        logging.info(f"size calculated, generating a {width} pixels "
+                     f"by {height} pixels image")
 
         grid = generate_grid(width, height)
         logging.info("empty image grid generated")
