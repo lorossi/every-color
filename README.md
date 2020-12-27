@@ -84,6 +84,14 @@ You can find a few more images inside the *output* folder.
 
 *Final image*
 
+![hue gif](https://github.com/lorossi/every-color/blob/master/output/video_3.gif?raw=true)
+
+*Sorted by hue*
+
+![hue gif final](https://github.com/lorossi/every-color/blob/master/output/frames_3/200.png?raw=true)
+
+*Final image*
+
 # Installation
 
 All the following steps require you to have Python installed. If you haven't, download it [here](https://www.python.org/downloads/).
