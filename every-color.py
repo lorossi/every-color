@@ -2,6 +2,8 @@ import time
 import random
 import logging
 import argparse
+
+import numpy as np
 from PIL import Image
 from math import sqrt
 from pathlib import Path
@@ -120,19 +122,22 @@ class Color:
 
 # generates all the colors needed in the script
 def generate_colors(bits):
-    colors = []
     # total items for each channel
     length = int(2 ** (bits / 3))
     # step of each channel
     step = int(256 / length)
-
+    # item counter
+    count = 0
+    # create array
+    colors = np.empty(length ** 3, dtype=object)
     # fill colors list by iterating over each channel
     for r in range(0, length):
         for g in range(0, length):
             for b in range(0, length):
                 # rgb values stored as Color item
                 new_color = Color(r * step, g * step, b * step)
-                colors.append(new_color)
+                colors[count] = new_color
+                count += 1
 
     return colors
 
@@ -154,7 +159,7 @@ def calculate_size(bits):
 
 # generate an empty grid
 def generate_grid(width, height):
-    grid = [[None for y in range(height)] for x in range(width)]
+    grid = np.empty(shape=(width, height), dtype=object)
     return grid
 
 
@@ -171,7 +176,8 @@ def find_free_neighbors(grid, pixel):
     width = len(grid)
     height = len(grid[0])
 
-    free_neighbors = []
+    free_neighbors = np.empty(shape=8, dtype=object)
+    count = 0
     # horizontal
     for px in range(pixel.x - 1, pixel.x + 2):
         if px >= width or px < 0:
@@ -187,17 +193,21 @@ def find_free_neighbors(grid, pixel):
                 continue
             if not grid[px][py]:
                 # if empty
-                free_neighbors.append(Pixel(px, py))
+                #free_neighbors.append()
+                free_neighbors[count] = Pixel(px, py)
+                count += 1
 
+    free_neighbors = free_neighbors[:count]
     return free_neighbors
 
 
 # calculates color difference between a color and its neighbors
 def calculate_diff(grid, pixel, color, dist_selection):
-    diffs = []
+    diffs = np.empty(shape=8, dtype=object)
     width = len(grid)
     height = len(grid[0])
 
+    count = 0
     # same as find_free_neighbors but we want to find full neighbors (not
     # empty as in the other)
     # horizontal
@@ -215,7 +225,11 @@ def calculate_diff(grid, pixel, color, dist_selection):
                 continue
             if grid[px][py]:
                 # if full
-                diffs.append(color_difference(grid[px][py], color))
+                # diffs.append(color_difference(grid[px][py], color))
+                diffs[count] = color_difference(grid[px][py], color)
+                count += 1
+
+    diffs = diffs[:count]
 
     if dist_selection == "average":
         # returns average according to diff
@@ -255,7 +269,8 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
     if start_color == "white":
         # colors list is built from least to most colored, so we need to put
         # the last item in front
-        colors.insert(0, colors.pop(-1))
+        np.insert(colors, 0, colors[-1])
+        colors = colors[:-1]
     elif start_color == "black":
         # first color is already the darkest, so no need to do anything
         pass
@@ -263,27 +278,34 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
         # pick a random element index
         color_index = random.randrange(len(colors))
         # put the random selected color in front
-        colors.insert(0, colors.pop(color_index))
+        first_color = colors[color_index]
+        np.delete(colors, color_index)
+        np.insert(colors, 0, first_color)
 
+    # convert back to python list
+    colors_list = list(colors)
     # sort colors
     if sort_colors == "hue":
         # sort by hue
-        colors = sorted(colors, key=lambda c: c.h)
+        colors_list = sorted(colors_list, key=lambda c: c.h)
     elif sort_colors == "saturation":
         # sort by saturation
-        colors = sorted(colors, key=lambda c: c.s)
+        colors_list = sorted(colors_list, key=lambda c: c.s)
     elif sort_colors == "brightness":
         # sort by value (brightness)
-        colors = sorted(colors, key=lambda c: c.v)
+        colors_list = sorted(colors_list, key=lambda c: c.v)
     elif sort_colors == "default":
         # do nothing
         pass
     elif sort_colors == "reverse":
         # reverse
-        colors.reverse()
+        colors_list.reverse()
     elif sort_colors == "random":
         # suffle array
-        random.shuffle(colors)
+        random.shuffle(colors_list)
+
+    # re-convert to numpy array
+    colors = np.array(colors_list)
 
     # iterate over colors
     for i in range(len(colors)):
@@ -331,6 +353,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
 
         # find all new available pixels
         new_available_pixels = find_free_neighbors(grid, selected_pixel)
+        print(type(new_available_pixels))
         # has any new pixel been added?
         new_pixels = False
         # loop throught them
@@ -343,6 +366,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
         if new_pixels:
             # shuffle the array
             random.shuffle(available_pixels)
+
         # remove the pixel that we just put
         available_pixels.remove(selected_pixel)
 
@@ -356,7 +380,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
             # .5 -> .50, (add zeroes at the and)
             last_saved_str = format(last_saved, '.2f')
             # grid deep copy
-            progress_grid = [g[:] for g in grid]
+            progress_grid = [g[:] for g in list(grid)]
             image = generate_image(progress_grid)
             logging.info(f"progress image at {last_saved_str}% generated")
             progress_filename = f"{filename}-progress-{last_saved_str}"
@@ -427,7 +451,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
                     logging.info("script paused")
                     script_paused = True
                 # lower the load on the cpu
-                time.sleep(1)
+                time.sleep(5)
 
             # if file does not exist but the script was script_paused,
             # it's time to start again
