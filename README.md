@@ -63,9 +63,14 @@ You can find a few more images inside the *output* folder.
 *Started with 1 pixel in each corner*
 
 ### Composition
-![composition](https://github.com/lorossi/every-color/blob/master/output/64_small_12bits.png?raw=true)
+![composition-1](https://github.com/lorossi/every-color/blob/master/output/64_small_12bits.png?raw=true)
 
 *Composition of 64 small images*
+
+
+![composition-2](https://github.com/lorossi/every-color/blob/master/output/composition_2/composition_2.png?raw=true)
+
+*Composition of 4 images*
 
 ### Progess Gifs
 ![minimum gif](https://github.com/lorossi/every-color/blob/master/output/video_1.gif?raw=true)
