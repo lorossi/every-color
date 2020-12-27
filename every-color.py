@@ -353,7 +353,7 @@ def place_pixels(grid, colors, start_position, start_points, start_color,
 
         # find all new available pixels
         new_available_pixels = find_free_neighbors(grid, selected_pixel)
-        print(type(new_available_pixels))
+
         # has any new pixel been added?
         new_pixels = False
         # loop throught them
