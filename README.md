@@ -54,7 +54,7 @@ You can find a few more images inside the *output* folder.
 *Started with 1 pixel in each corner*
 
 ### Average selection, random color sorting
-![centered start](https://github.com/lorossi/every-color/blob/master/output/frames_2/200.png?raw=true)
+![centered start](https://github.com/lorossi/every-color/blob/master/output/frames-2/200.png?raw=true)
 
 *Started with a random pixel in center*
 
@@ -68,32 +68,36 @@ You can find a few more images inside the *output* folder.
 *Composition of 64 small images*
 
 
-![composition-2](https://github.com/lorossi/every-color/blob/master/output/composition_2/composition_2.png?raw=true)
+![composition-2](https://github.com/lorossi/every-color/blob/master/output/composition-2/composition-2.png?raw=true)
+
+*Composition of 4 images*
+
+![composition-3](https://github.com/lorossi/every-color/blob/master/output/composition-3/composition-3.png?raw=true)
 
 *Composition of 4 images*
 
 ### Progess Gifs
-![minimum gif](https://github.com/lorossi/every-color/blob/master/output/video_1.gif?raw=true)
+![minimum gif](https://github.com/lorossi/every-color/blob/master/output/gifs/video-1.gif?raw=true)
 
 *Minimum selection*
 
-![minimum gif final](https://github.com/lorossi/every-color/blob/master/output/frames_1/200.png?raw=true)
+![minimum gif final](https://github.com/lorossi/every-color/blob/master/output/frames-1/200.png?raw=true)
 
 *Final image*
 
-![average gif](https://github.com/lorossi/every-color/blob/master/output/video_2.gif?raw=true)
+![average gif](https://github.com/lorossi/every-color/blob/master/output/gifs/video-2.gif?raw=true)
 
 *Average selection*
 
-![average gif final](https://github.com/lorossi/every-color/blob/master/output/frames_2/200.png?raw=true)
+![average gif final](https://github.com/lorossi/every-color/blob/master/output/frames-2/200.png?raw=true)
 
 *Final image*
 
-![hue gif](https://github.com/lorossi/every-color/blob/master/output/video_3.gif?raw=true)
+![hue gif](https://github.com/lorossi/every-color/blob/master/output/gifs/video-3.gif?raw=true)
 
 *Sorted by hue*
 
-![hue gif final](https://github.com/lorossi/every-color/blob/master/output/frames_3/200.png?raw=true)
+![hue gif final](https://github.com/lorossi/every-color/blob/master/output/frames-3/200.png?raw=true)
 
 *Final image*
 
@@ -132,9 +136,9 @@ All arguments are optionals
 - Generate 1 image with a color depth of 18 bits (512 by 512 pixels): `python3 every-color.py -b 18`
 - Generate 5 images and log progress to console: `python3 every-color.py -n 5 -l console`
 - Generate 2 images starting with from the central pixel and save them in `generated/`: `python3 every-color.py -n 2 -p center -o generated`
-- Generate 1 image starting with white and save 200 progress pics: `python3 every-color.py -c white --PROGRESSPICS 200`
-- Generate 1 image sorting all colors by hue: `python3 every-color.py --SORTCOLORS hue`
-- Generate 10 images with 5 random starting points and average distance selections: `python3 every-color.py -n 5 --STARTPOINTS 5 --DISTSELECTION average`
+- Generate 1 image starting with white and save 200 progress pics: `python3 every-color.py -c white --progresspics 200`
+- Generate 1 image sorting all colors by hue: `python3 every-color.py --sortcolors hue`
+- Generate 10 images with 5 random starting points and average distance selections: `python3 every-color.py -n 5 --startpoints 5 --distselection average`
 
 ## Pause script
 
