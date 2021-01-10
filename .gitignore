@@ -1,6 +1,5 @@
 *.xcf
-*test.py
 *.log
-/tests
 PAUSE*
-instagram/
+instagram
+__pycache__
