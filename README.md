@@ -62,7 +62,7 @@ You can find a few more images inside the *output* folder.
 
 *Started with 1 pixel in each corner*
 
-### Composition
+### Compositions
 ![composition-1](https://github.com/lorossi/every-color/blob/master/output/64_small_12bits.png?raw=true)
 
 *Composition of 64 small images*
