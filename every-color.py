@@ -544,11 +544,13 @@ def main():
 
     # logging setup
     if args.log == "file":
-        logfile = "every-color.log"
+        # logging filename generation
+        now = datetime.now().strftime("%Y%m%d-%H%M%S")
+        logfile = f"every-color-{now}.log"
         logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                             level=logging.INFO, filename=logfile,
                             filemode="w+")
-        print("Logging in every-color.log")
+        print(f"Logging in {logfile}")
     else:
         logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                             level=logging.INFO)
@@ -561,11 +563,12 @@ def main():
         logging.error("the bit number must be dibisible by 3")
         return
 
-    # random.seed
+    # random.seeding
     seed = args.seed
     if not seed:
         # seed not provided, we use current time (converted to string)
-        seed = str(datetime.now().timestamp())
+        seed = str(time.time())
+    random.seed(seed)
 
     # get output folder
     path = args.output
@@ -601,8 +604,6 @@ def main():
     images_to_generate = args.number
     for x in range(images_to_generate):
         logging.info(f"started generating image {x+1}/{images_to_generate}")
-        # random seeding
-        random.seed(seed)
         # output filename generation
         now = datetime.now().strftime("%Y%m%d-%H%M%S")
         filename = f"every-color-{now}"
