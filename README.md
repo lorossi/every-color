@@ -4,6 +4,8 @@ I wanted to generate an image containing every color, so here we go.
 
 This *not-so-handy* tool is ready to make any image you want! Just simple these simple (I swear, it's simple) instructions.
 
+Skip to [installation](installation) or [script usage](script-usage) to start making images right away or scroll down a little bit to learn how this works and look at some finished images.
+
 # How it works
 
 This is how the script operates:
@@ -17,7 +19,7 @@ This is how the script operates:
 7. It saves the final image.
 
 ## Outputs
-You can find a few more images inside the *output* folder.
+You can find a few more images inside the *output* folder or on my [Instagram profile](https://www.instagram.com/lorossi97/).
 
 ### Minimum selection, random color sorting
 ![centered start](https://github.com/lorossi/every-color/blob/master/output/18bits-center.png?raw=true)
@@ -93,11 +95,11 @@ You can find a few more images inside the *output* folder.
 
 *Final image*
 
-![hue gif](https://github.com/lorossi/every-color/blob/master/output/gifs/video-3.gif?raw=true)
+![hue gif](https://github.com/lorossi/every-color/blob/master/output/gifs/video-3.gif?raw=true | width=800)
 
 *Sorted by hue*
 
-![hue gif final](https://github.com/lorossi/every-color/blob/master/output/frames-3/200.png?raw=true)
+![hue gif final](https://github.com/lorossi/every-color/blob/master/output/frames-3/200.png?raw=true | width=800)
 
 *Final image*
 
