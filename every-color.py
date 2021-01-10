@@ -193,7 +193,6 @@ def find_free_neighbors(grid, pixel):
                 continue
             if not grid[px][py]:
                 # if empty
-                #free_neighbors.append()
                 free_neighbors[count] = Pixel(px, py)
                 count += 1
 
