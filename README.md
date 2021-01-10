@@ -4,7 +4,7 @@ I wanted to generate an image containing every color, so here we go.
 
 This *not-so-handy* tool is ready to make any image you want! Just simple these simple (I swear, it's simple) instructions.
 
-Skip to [installation](installation) or [script usage](script-usage) to start making images right away or scroll down a little bit to learn how this works and look at some finished images.
+Skip to [installation](#installation) or [script usage](#script-usage) to start making images right away or scroll down a little bit to learn how this works and look at some finished images.
 
 # How it works
 
