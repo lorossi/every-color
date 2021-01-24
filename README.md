@@ -95,11 +95,11 @@ You can find a few more images inside the *output* folder or on my [Instagram pr
 
 *Final image*
 
-![hue gif](https://github.com/lorossi/every-color/blob/master/output/gifs/video-3.gif?raw=true | width=800)
+![hue gif](https://github.com/lorossi/every-color/blob/master/output/gifs/video-3.gif?raw=true)
 
 *Sorted by hue*
 
-![hue gif final](https://github.com/lorossi/every-color/blob/master/output/frames-3/200.png?raw=true | width=800)
+![hue gif final](https://github.com/lorossi/every-color/blob/master/output/frames-3/200.png?raw=true)
 
 *Final image*
 
