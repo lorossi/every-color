@@ -74,7 +74,7 @@ You can find a few more images inside the *output* folder or on my [Instagram pr
 
 *Composition of 4 images*
 
-![composition-3](https://github.com/lorossi/every-color/blob/master/output/composition-3/composition-1.png?raw=true)
+![composition-3](https://github.com/lorossi/every-color/blob/master/output/composition-1/composition-1.png?raw=true)
 
 *Composition of 4 images*
 
