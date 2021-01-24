@@ -572,7 +572,6 @@ def main():
     # get output folder
     path = args.output
 
-    random.seed(seed)
     logging.info(f"seed used for random functions: {seed}")
     logging.info("basic setup completed, generating image with "
                  f"{bits} bits")
